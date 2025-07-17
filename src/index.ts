@@ -1,42 +1,35 @@
-import Fastify,{FastifyInstance } from 'fastify'
-import mysql from '@fastify/mysql'
-import env from '@fastify/env'
+import Fastify,{FastifyInstance,} from 'fastify'
+import mysql,{MySQLPool}from '@fastify/mysql'
+import { readFileSync } from 'fs';
 
-const config_schema = {
-  type: 'object',
-  required: ['connectionString'],
-  properties: {
-    connection: { type: 'string', default: '3000' }
+import { z ,ZodType } from "zod";
+const config_schema = z.object({
+  connectionString: z.string(),
+});
+function read_zod<T>(filename: string, schema: ZodType<T>): T {
+  const config_data = readFileSync(filename, 'utf-8');  //read sync so doent need the buildfasity pattern
+  return schema.parse(JSON.parse(config_data));
+}
+declare module 'fastify' {
+  interface FastifyInstance {
+    mysql: MySQLPool
   }
 }
+const {connectionString}=read_zod('./config.json',config_schema)
 
 async function  make_app(app:FastifyInstance){
-  await app.register(env, {
-    confKey: 'config',
-    schema:config_schema,
-    dotenv: true // loads from .env automatically
-  })
-  const {connectionString}=app.config
-  app.register(mysql, {
-    connectionString: 'mysql://root@localhost/mysql'
+  await app.register(mysql, {
+    connectionString,
+    promise: true,
   })
   // Declare a route
   app.get('/', async function handler (request, reply) {
+    const [rows] = await app.mysql.query('SELECT * FROM your_table')
     reply.type('text/html').send('<h1>hello</h1> this is html')
   })
-  return app
 }
 
-// Run the server!
-async function runit(){
-  const app = Fastify({logger: true})
-  try {
-    await make_app(app)
-    await app.listen({ port: 3000 })
-  } catch (err) {
-    app.log.error(err)
-    process.exit(1)
-  }
-}
+const app = Fastify({logger: true})
+app.listen({ port: 3000 })
 
-runit()
+
