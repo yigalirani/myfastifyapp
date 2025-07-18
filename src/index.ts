@@ -19,8 +19,10 @@ async function build_server(app:FastifyInstance){
   const {connection}= utils.read_zod('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
 
-  app.get('/:path.htm', async function handler (request, reply) {
-    const rows=await db.selectFrom('mc_post').limit(5).selectAll().execute()
+  app.get<{Params: {page: string}}>(
+    '/:page(.*).htm', async function handler (request, reply) {
+    const { page } = request.params;
+    const rows=await db.selectFrom('mc_post').where('post_name','=',page).selectAll().executeTakeFirst()
     const content=varlog.css+varlog.dump('res',rows)
     reply.type('text/html').send(content)
   })
