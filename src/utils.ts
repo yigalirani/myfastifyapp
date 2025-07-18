@@ -31,8 +31,8 @@ export function textileToMarkdown(textile: string): string { // https://claude.a
   // Code spans
   markdown = markdown.replace(/@([^@]+)@/g, '`$1`');
 
-  // Strike-through - only convert dashes surrounded by whitespace or line boundaries
-  markdown = markdown.replace(/(^|\s)-([^-]+)-(\s|$)/g, '$1~~$2~~$3');
+  // Strike-through - only convert ASCII hyphen-minus (U+002D) surrounded by whitespace or line boundaries
+  //markdown = markdown.replace(/(^|\s)\u002D([^\u002D]+)\u002D(\s|$)/g, '$1~~$2~~$3');
 
   // Links
   markdown = markdown.replace(/"([^"]+)":([^\s]+)/g, '[$1]($2)');
@@ -62,7 +62,7 @@ export function textileToMarkdown(textile: string): string { // https://claude.a
   markdown = markdown.replace(/^pre\.\s+(.+)$/gm, '```\n$1\n```');
 
   // Tables - basic conversion
-  markdown = markdown.replace(/^\|(.+)\|$/gm, (match, content:string) => {
+  markdown = markdown.replace(/^\|(.+)\|$/gm, (match, content) => {
     const cells = content.split('|').map(cell => cell.trim());
     return '| ' + cells.join(' | ') + ' |';
   });
@@ -77,17 +77,7 @@ export function textileToMarkdown(textile: string): string { // https://claude.a
     return line + '\n' + separator;
   });
 
-  // Footnotes
-  markdown = markdown.replace(/\[([0-9]+)\]/g, '[^$1]');
-  markdown = markdown.replace(/^fn([0-9]+)\.\s+(.+)$/gm, '[^$1]: $2');
 
-  // Acronyms/Abbreviations - convert to regular text (Markdown doesn't have native support)
-  markdown = markdown.replace(/([A-Z]{2,})\(([^)]+)\)/g, '$1 ($2)');
-
-  // Clean up extra whitespace
-  markdown = markdown.replace(/\n{3,}/g, '\n\n');
-  markdown = markdown.trim();
 
   return markdown;
 }
-
