@@ -5,6 +5,7 @@ import * as utils from './utils'
 import {print_body} from './render_page'
 import { z } from "zod";
 import { marked } from 'marked'
+import fastifyStatic from '@fastify/static';
 const config_schema = z.object({
   connectionString: z.string(),
   connection:z.object({
@@ -22,7 +23,11 @@ const config_schema = z.object({
 async function build_server(app:FastifyInstance){
   const {connection}= utils.read_zod('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
+  app.register(fastifyStatic, {
+    root: 'c:/yigal/mc2/images', // Root filesystem path
+    prefix: '/', // URL prefix (optional)
 
+  });
   app.get<{Params: {page: string}}>(
     '/:page(.*).htm', async function handler (request, reply) {
     const { page } = request.params;

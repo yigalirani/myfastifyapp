@@ -10,9 +10,9 @@ interface Meta{
   meta_keywords:string
   logo:string
 }
-export function print_body({meta,sidebar,post_title,login_menu,menu,body}:{
+export function print_body({meta,post_sidebar,post_title,login_menu,menu,body}:{
   meta?:Meta
-  sidebar?:string
+  post_sidebar?:string
   post_title?:string
   login_menu?:string
   menu?:string
@@ -26,9 +26,9 @@ export function print_body({meta,sidebar,post_title,login_menu,menu,body}:{
   }()
   //    $g->body=str_replace("<!--error--!>",$g->error,$g->body);
   const sidebar_section=function(){
-    if (sidebar==null)
+    if (post_sidebar==null)
       return '<div class=sidebar2>&nbsp</div>'
-    return `<div class='sidebar'>${sidebar}</div>`
+    return `<div class='sidebar'>${post_sidebar}</div>`
   }()
 
   return`<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
