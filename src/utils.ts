@@ -1,7 +1,60 @@
 import { readFileSync } from 'fs';
 import { ZodType } from "zod";
 import { createPool,PoolOptions } from 'mysql2' 
-import { Kysely, MysqlDialect, } from 'kysely'
+import { Kysely, MysqlDialect} from 'kysely'
+import { keyBy } from 'lodash';
+/*group of gerneric functions with understood input output that can be used in other programs with another databasre schems*/
+export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
+  return a[field]
+}
+
+function index_array<T extends Record<string, any>, K extends keyof T>(
+  items: T[],
+  key: K
+): Record<PropertyKey, T> {
+  const ans:Record<PropertyKey, T>={}
+  for (const item of items) {
+    const keyValue = item[key];
+    ans[keyValue] = item;
+  }
+  return ans;
+}
+
+type TocItem<T> = T & { 
+  children: TocItem<T>[] 
+  next:TocItem<T>|undefined
+};
+function make_item<T>(a:T):TocItem<T>{
+  return {...a,children:[],next:undefined}
+}
+interface Toc<T>{
+  toc:Record<PropertyKey,TocItem<T> >
+  parent_path:TocItem<T>[]
+}
+export function generate_toc<T extends Record<string, any>>({items,id_field,parent_id_field,start_id}:{
+  items: T[], //presorted by pos in patnet children order (in the db)
+  id_field: keyof T,
+  parent_id_field: keyof T,
+  start_id: string | number
+}): Toc<T>{
+  const enhanced_items=items.map(make_item)
+  const by_id=index_array(enhanced_items,id_field)
+  for (const item of enhanced_items){
+    const item_parent_id:PropertyKey=item[parent_id_field]
+    const parent_item=by_id[item_parent_id]
+    if (parent_item==null)
+      continue
+    parent_item.children.push(item)
+  }
+  let cur_item=by_id[start_id]
+  const parent_path:TocItem<T>[]=[]
+  while(cur_item!=null){
+    parent_path.unshift(cur_item)
+    cur_item=by_id[cur_item[parent_id_field]]
+  }
+  return {toc:by_id,parent_path}
+}
+
 export function read_zod<T>(filename: string, schema: ZodType<T>): T {
   const config_data = readFileSync(filename, 'utf-8');  //read sync so doent need the buildfasity pattern
   return schema.parse(JSON.parse(config_data));
@@ -13,7 +66,16 @@ export function mysql_pool<T>(connection:PoolOptions){
   const db = new Kysely<T>({dialect})
   return db
 }
+export interface TocOptions<T extends object> {
+  items: T[];
+  idField: keyof T;
+  parentIdField: keyof T;
+  startId: number;
+}
 
+export type TocNode<T> = T & {
+  children?: TocNode<T>[];
+};
 export function textileToMarkdown(textile: string): string { // https://claude.ai/public/artifacts/04904f93-eb57-442e-afb6-2f0354d1c679
   let markdown = textile;
 

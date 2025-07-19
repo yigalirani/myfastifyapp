@@ -6,9 +6,9 @@ date_default_timezone_set('America/New_York');
 $date=date("Y");
 */
 interface Meta{
-  meta_description:string
-  meta_keywords:string
-  logo:string
+  meta_description:string|null
+  meta_keywords:string|null
+  meta_logo:string|null
 }
 export function print_body({meta,post_sidebar,post_title,login_menu,menu,body}:{
   meta?:Meta
@@ -51,7 +51,7 @@ export function print_body({meta,post_sidebar,post_title,login_menu,menu,body}:{
       <div class="wrapper">
         <div class="header">
           <a href='/cart_show'><img class=shop_header_icon src=/cart.png></a>
-                                  ${meta?.logo||''}
+                                  ${meta?.meta_logo||''}
           <div class="header_login">
             ${login_menu||''}
           </div>	
