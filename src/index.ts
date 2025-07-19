@@ -5,7 +5,7 @@ import {print_body} from './render_page'
 import { z } from "zod";
 import { marked } from 'marked'
 import fastifyStatic from '@fastify/static';
-import { Kysely, MysqlDialect} from 'kysely'
+import { Kysely} from 'kysely'
 const config_schema = z.object({
   connectionString: z.string(),
   connection:z.object({
@@ -17,21 +17,43 @@ const config_schema = z.object({
     connectionLimit: z.number()
   })
 });
-async function toc_box_head(db:Kysely<DB>,post_id:number) { //starting with this post_id, build the toc, also get met
-    const posts = await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
+
+async function print_menu(db:Kysely<DB>) {
+  const rows=await db.selectFrom('menu_view').selectAll().execute()
+  return rows.map(({post_name,post_title,menu_script})=>{
+    if (menu_script)
+      return `<a href='/$g->php_dir/$script'>${post_title}</a>`
+    return `<a href='/${post_name}.htm'>${post_title}</a>`
+  }).join('\n')
+}
+async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when needed
+  const posts=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
+  const posts_index=utils.index_array(posts,'post_name')
+  return{
+    posts,
+    posts_index,
+    menu:await print_menu(db),
+    meta:utils.index_array(await db.selectFrom('mc_meta').selectAll().execute(),'meta_post_id')
+  }
+}
+type Cache=Awaited<ReturnType<typeof make_cache>>
+async function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
     const toc=utils.generate_toc({
-      items:posts,  
+      items:cache.posts,  
       id_field:'ID',
       parent_id_field: 'post_parent',
       start_id:post_id
     })
     const meta_post_id=toc.parent_path[0].ID
-    const meta=await db.selectFrom('mc_meta').where('meta_post_id','=',meta_post_id).selectAll().executeTakeFirst()
+    const meta=cache.meta[meta_post_id]
     return {meta,toc} 
 }
+
+
 async function build_server(app:FastifyInstance){
   const {connection}= utils.read_zod('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
+  const cache:Cache=await make_cache(db)
   app.register(fastifyStatic, {
     root: 'c:/yigal/mc2/images', // Root filesystem path
     prefix: '/', // URL prefix (optional)
@@ -53,15 +75,15 @@ async function build_server(app:FastifyInstance){
         reply.callNotFound();
         return
     }
-    const post=await db.selectFrom('mc_post').where('post_name','=',page).selectAll().executeTakeFirst()
+    const post=cache.posts_index[page]
     const content=await async function(){
       if (post==null)
         return print_body({body:'page not found'})
       const markdown=utils.textileToMarkdown(post.post_content)
       const body=await marked(markdown)
-      const {meta,toc}=await toc_box_head(db,post.ID)
-
-      return print_body({...post,body,meta})
+      const {meta,toc}=await toc_box_head(cache,post.ID)
+      
+      return print_body({...post,body,meta,menu:cache.menu})
     }()
     reply.type('text/html').send(content)
   })

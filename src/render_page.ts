@@ -41,6 +41,11 @@ export function print_body({meta,post_sidebar,post_title,login_menu,menu,body}:{
   <meta http-equiv=Pragma CONTENT=no-cache>
 
   <link rel="stylesheet" href="/style2.css" type="text/css" media="screen" >
+  <style>
+  *{
+    box-sizing: border-box;
+  }
+  </style>
   <script type="text/javascript" src="/$g->php_dir/script.js"></script>
   ${meta_section}
 

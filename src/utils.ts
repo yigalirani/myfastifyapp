@@ -2,13 +2,12 @@ import { readFileSync } from 'fs';
 import { ZodType } from "zod";
 import { createPool,PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
-import { keyBy } from 'lodash';
 /*group of gerneric functions with understood input output that can be used in other programs with another databasre schems*/
 export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
   return a[field]
 }
 
-function index_array<T extends Record<string, any>, K extends keyof T>(
+export function index_array<T extends Record<string, any>, K extends keyof T>(
   items: T[],
   key: K
 ): Record<PropertyKey, T> {
@@ -63,7 +62,7 @@ export function mysql_pool<T>(connection:PoolOptions){
   const dialect = new MysqlDialect({
     pool: createPool(connection)
   })
-  const db = new Kysely<T>({dialect})
+  const db = new Kysely<T>({dialect,log:['query']})
   return db
 }
 export interface TocOptions<T extends object> {
@@ -142,4 +141,18 @@ export function textileToMarkdown(textile: string): string { // https://claude.a
 
 
   return markdown;
+}
+export class Timer{
+  start=performance.now()
+  last=this.start
+  enter(){
+    this.start=performance.now()
+    this.last=this.start
+  }
+  point(name:string){
+    return
+    const now=performance.now()
+    console.log(`${name} ${now-this.start} ${now-this.last}`)
+    this.last=now
+  }
 }
