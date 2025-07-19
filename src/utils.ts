@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { ZodType } from "zod";
 import { createPool,PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
+import {FastifyReply, FastifyRequest} from 'fastify'
 /*group of gerneric functions with understood input output that can be used in other programs with another databasre schems*/
 export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
   return a[field]
@@ -156,3 +157,22 @@ export class Timer{
     this.last=now
   }
 }
+
+
+export function calc_page(req:FastifyRequest,reply:FastifyReply){
+  //todo: this is not generic enouth. add config here for default page name and extension
+    const path = (req.raw.url||'').replace(/^\//,'')   
+    const page=function(){
+      if (path==null||path==='')
+        return 'index'
+      if (!path.endsWith('.htm')){ //routing syntax not smart enough to do it
+        return
+      }
+      return path.slice(0,-4)
+    }()
+    if (page==null){
+        reply.callNotFound();
+        return
+    }
+    return page
+  }

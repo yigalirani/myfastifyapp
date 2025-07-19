@@ -62,19 +62,8 @@ async function build_server(app:FastifyInstance){
   });
   app.get(
     '/*', async function handler (request, reply) {
-    const path = (request.raw.url||'').replace(/^\//,'')
-    const page=function(){
-      if (path==null||path==='')
-        return 'index'
-      if (!path.endsWith('.htm')){ //routing syntax not smart enough to do it
-        return
-      }
-      return path.slice(0,-4)
-    }()
-    if (page==null){
-        reply.callNotFound();
-        return
-    }
+    const page=utils.calc_page(request,reply)   
+    if (page==null) return 
     const post=cache.posts_index[page]
     const content=await async function(){
       if (post==null)
