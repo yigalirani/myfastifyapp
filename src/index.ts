@@ -38,11 +38,11 @@ async function build_server(app:FastifyInstance){
     wildcard:false,
     extensions:['.css','.png']
   });
-  app.get<{Params: {path: string}}>(
+  app.get(
     '/*', async function handler (request, reply) {
-    const path = request.params['*']
+    const path = (request.raw.url||'').replace(/^\//,'')
     const page=function(){
-      if (path==='')
+      if (path==null||path==='')
         return 'index'
       if (!path.endsWith('.htm')){ //routing syntax not smart enough to do it
         return
