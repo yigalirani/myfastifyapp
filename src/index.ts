@@ -51,10 +51,9 @@ async function toc_box_head(cache:Cache,post_id:number) { //starting with this p
         }
       }
     })
-    const {toc_section}=toc
     const meta_post_id=toc.parent_path[0].ID
     const meta=cache.meta[meta_post_id]
-    return {meta,toc_section} 
+    return {meta,...toc} 
 }
 
 
@@ -80,9 +79,9 @@ async function build_server(app:FastifyInstance){
       const markdown=utils.textileToMarkdown(post.post_content)
       //writeFile('mark.md',markdown)
       const body=await marked(markdown)
-      const {meta,toc_section}=await toc_box_head(cache,post.ID)
+      const toc=await toc_box_head(cache,post.ID)
       
-      return print_body({...post,body,meta,menu:cache.menu,toc_section})
+      return print_body({...post,body,menu:cache.menu,...toc})
     }()
     reply.type('text/html').send(content)
   })

@@ -10,7 +10,7 @@ interface Meta{
   meta_keywords:string|null
   meta_logo:string|null
 }
-export function print_body({ meta, post_sidebar, post_title, login_menu, menu, body, toc_section }: {
+export function print_body({ meta, post_sidebar, post_title, login_menu, menu, body, toc_section,next,last }: {
   meta?:Meta
   post_sidebar?:string
   post_title?:string
@@ -18,6 +18,8 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
   menu?:string
   body:string
   toc_section?: string
+  next?:string
+  last?:string
 }){
   const meta_section=function(){
     if (meta==null)
@@ -32,6 +34,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
       return ''
     return `<div class='${class_name}'>${a}</div>`
   }
+  //       ${div(next, 'toc_box_next_link')}
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
   <html>
 
@@ -68,6 +71,8 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
               ${div(post_sidebar, 'post_sidebar')}
               </div>
               ${div(body, 'content_body')}
+              ${div(last, 'toc_box_next_link')}              
+       
               <div class=copyright>
                       Copyright &copy;  2003 - ${new Date().getFullYear()} by symbol click. <A href="http://symbolclick.com/about.htm">Contact info</A>
               </div>

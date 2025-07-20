@@ -40,6 +40,8 @@ function calc_first_non_folder<T>(item:TocItem<T>){
     return item
   return calc_first_non_folder(item.children[0])
 }
+
+
 export function generate_toc<T extends Record<string, any>>({items,id_field,parent_id_field,start_id,render_item}:{
   items: T[] //presorted by pos in patnet children order (in the db)
   id_field: keyof T
@@ -56,19 +58,28 @@ export function generate_toc<T extends Record<string, any>>({items,id_field,pare
       continue
     parent_item.children.push(item)
   }
-  let cur_item=by_id[start_id]
+  const item=by_id[start_id]
+  let cur_item=item
   const parent_path:TocItem<T>[]=[]
   while(cur_item!=null){
     parent_path.unshift(cur_item)
     cur_item=by_id[cur_item[parent_id_field]]
   }
-  const _toc_section_simple=function(){
-    const selected=parent_path.at(-1)
-    if (selected==null)
-      return ''
-    const {title,href}=render_item(selected)
-    return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`
-  }()
+  function calc_next(item:TocItem<T>,dpos:number,caption:string ){
+    const parent_id=item[parent_id_field]
+    const parent=by_id[parent_id]
+    if (parent==null)
+      return 
+    // eslint-disable-next-line eqeqeq
+    const pos=parent.children.findIndex(x=>x==item)
+    const ans=parent.children[pos+dpos]
+    if (ans!=null){
+      const {title,href}=render_item(ans)
+      return `<a href="${href}">${caption} - ${title}</a>`
+    }
+    return calc_next(parent,dpos,caption)
+  }  
+  
   function render_toc(item:TocItem<T>,top:boolean):string{
     const folder=item.children.length>0
     if (top&&!folder)
@@ -95,7 +106,9 @@ export function generate_toc<T extends Record<string, any>>({items,id_field,pare
     return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
   }
   const toc_section=render_toc(parent_path[0],true)
-  return {toc:by_id,parent_path,toc_section}
+  const next=calc_next(item,1,'Next')
+  const last=calc_next(item,-1,'Last')
+  return {toc:by_id,parent_path,toc_section,next,last}
 }
 
 
