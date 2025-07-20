@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { writeFile } from 'fs/promises';
 import { ZodType } from "zod";
 import { createPool,PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
@@ -27,16 +28,20 @@ type TocItem<T> = T & {
 function make_item<T>(a:T):TocItem<T>{
   return {...a,children:[],next:undefined}
 }
-interface Toc<T>{
-  toc:Record<PropertyKey,TocItem<T> >
-  parent_path:TocItem<T>[]
+
+export function tag(content:string|undefined,tag:string){ //is usefull?
+  if (content==null)
+    return ''
+  return `<${tag}>content</${tag}>`
+
 }
-export function generate_toc<T extends Record<string, any>>({items,id_field,parent_id_field,start_id}:{
-  items: T[], //presorted by pos in patnet children order (in the db)
-  id_field: keyof T,
-  parent_id_field: keyof T,
+export function generate_toc<T extends Record<string, any>>({items,id_field,parent_id_field,start_id,render_item}:{
+  items: T[] //presorted by pos in patnet children order (in the db)
+  id_field: keyof T
+  parent_id_field: keyof T
   start_id: string | number
-}): Toc<T>{
+  render_item:(a:T)=>{title:string,href:string}
+})/*: Toc<T>*/{
   const enhanced_items=items.map(make_item)
   const by_id=index_array(enhanced_items,id_field)
   for (const item of enhanced_items){
@@ -52,8 +57,16 @@ export function generate_toc<T extends Record<string, any>>({items,id_field,pare
     parent_path.unshift(cur_item)
     cur_item=by_id[cur_item[parent_id_field]]
   }
-  return {toc:by_id,parent_path}
+  const toc_section=function(){
+    const selected=parent_path.at(-1)
+    if (selected==null)
+      return ''
+    const {title,href}=render_item(selected)
+    return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`
+  }()
+  return {toc:by_id,parent_path,toc_section}
 }
+
 
 export function read_zod<T>(filename: string, schema: ZodType<T>): T {
   const config_data = readFileSync(filename, 'utf-8');  //read sync so doent need the buildfasity pattern
@@ -96,8 +109,10 @@ export function textileToMarkdown(textile: string): string { // https://claude.a
   // Strike-through - only convert ASCII hyphen-minus (U+002D) surrounded by whitespace or line boundaries
   //markdown = markdown.replace(/(^|\s)\u002D([^\u002D]+)\u002D(\s|$)/g, '$1~~$2~~$3');
 
-  // Links
-  markdown = markdown.replace(/"([^"]+)":([^\s]+)/g, '[$1]($2)');
+  // Links - stop at punctuation that's typically not part of URLs (but allow periods and common URL chars)
+
+  markdown = markdown.replace(/"([^"]*)":([^\s|,]+)/gm, '[$1]($2)');
+
 
   // Images
   markdown = markdown.replace(/!([^!]+)!/g, '![]($1)');
@@ -125,7 +140,7 @@ export function textileToMarkdown(textile: string): string { // https://claude.a
 
   // Tables - basic conversion
   markdown = markdown.replace(/^\|(.+)\|$/gm, (match, content) => {
-    const cells = content.split('|').map(cell => cell.trim());
+    const cells = content.split('|').map((cell: string) => cell.trim());
     return '| ' + cells.join(' | ') + ' |';
   });
 

@@ -10,13 +10,14 @@ interface Meta{
   meta_keywords:string|null
   meta_logo:string|null
 }
-export function print_body({meta,post_sidebar,post_title,login_menu,menu,body}:{
+export function print_body({ meta, post_sidebar, post_title, login_menu, menu, body, toc_section }: {
   meta?:Meta
   post_sidebar?:string
   post_title?:string
   login_menu?:string
   menu?:string
   body:string
+  toc_section?: string
 }){
   const meta_section=function(){
     if (meta==null)
@@ -25,13 +26,13 @@ export function print_body({meta,post_sidebar,post_title,login_menu,menu,body}:{
     <meta name='keywords' content='${meta.meta_keywords}'>\n`
   }()
   //    $g->body=str_replace("<!--error--!>",$g->error,$g->body);
-  const sidebar_section=function(){
-    if (post_sidebar==null)
-      return '<div class=sidebar2>&nbsp</div>'
-    return `<div class='sidebar'>${post_sidebar}</div>`
-  }()
 
-  return`<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+  function div(a: string | undefined, class_name: string) {
+    if (a == null || a === '')
+      return ''
+    return `<div class='${class_name}'>${a}</div>`
+  }
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
   <html>
 
   <head>
@@ -56,25 +57,21 @@ export function print_body({meta,post_sidebar,post_title,login_menu,menu,body}:{
       <div class="wrapper">
         <div class="header">
           <a href='/cart_show'><img class=shop_header_icon src=/cart.png></a>
-                                  ${meta?.meta_logo||''}
-          <div class="header_login">
-            ${login_menu||''}
-          </div>	
+                                  ${meta?.meta_logo || ''}
+           ${div(login_menu, 'header_login')}
           <div class=header_logo>
             <a href='/' ><img src='/logo.png' alt="xml marker"></a>
           </div>
-          <div class="header_menu">
-            ${menu||''}
-          </div>
-
+          ${div(menu, 'header_menu')}
           <div class=header_bottom>
           </div>
         </div>
           <div class=content>
-              ${sidebar_section}
-              <div class="content_body">
-                      ${body}
+          <div class=sidebar>
+              ${div(toc_section, 'toc_box')}
+              ${div(post_sidebar, 'post_sidebar')}
               </div>
+              ${div(body, 'content_body')}
               <div class=copyright>
                       Copyright &copy;  2003 - ${new Date().getFullYear()} by symbol click. <A href="http://symbolclick.com/about.htm">Contact info</A>
               </div>

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { marked } from 'marked'
 import fastifyStatic from '@fastify/static';
 import { Kysely} from 'kysely'
+import { writeFile } from 'fs/promises';
 const config_schema = z.object({
   connectionString: z.string(),
   connection:z.object({
@@ -42,11 +43,18 @@ async function toc_box_head(cache:Cache,post_id:number) { //starting with this p
       items:cache.posts,  
       id_field:'ID',
       parent_id_field: 'post_parent',
-      start_id:post_id
+      start_id:post_id,
+      render_item({post_title,post_name}){
+        return{
+          title:post_title,
+          href:`/${post_name}.htm`
+        }
+      }
     })
+    const {toc_section}=toc
     const meta_post_id=toc.parent_path[0].ID
     const meta=cache.meta[meta_post_id]
-    return {meta,toc} 
+    return {meta,toc_section} 
 }
 
 
@@ -68,11 +76,13 @@ async function build_server(app:FastifyInstance){
     const content=await async function(){
       if (post==null)
         return print_body({body:'page not found'})
+      writeFile('textile.txt',post.post_content)
       const markdown=utils.textileToMarkdown(post.post_content)
+      writeFile('mark.md',markdown)
       const body=await marked(markdown)
-      const {meta,toc}=await toc_box_head(cache,post.ID)
+      const {meta,toc_section}=await toc_box_head(cache,post.ID)
       
-      return print_body({...post,body,meta,menu:cache.menu})
+      return print_body({...post,body,meta,menu:cache.menu,toc_section})
     }()
     reply.type('text/html').send(content)
   })
