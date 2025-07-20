@@ -57,13 +57,33 @@ export function generate_toc<T extends Record<string, any>>({items,id_field,pare
     parent_path.unshift(cur_item)
     cur_item=by_id[cur_item[parent_id_field]]
   }
-  const toc_section=function(){
+  const _toc_section_simple=function(){
     const selected=parent_path.at(-1)
     if (selected==null)
       return ''
     const {title,href}=render_item(selected)
     return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`
   }()
+  function render_toc(item:TocItem<T>,top:boolean):string{
+    const {title,href}=render_item(item)
+    const folder=item.children.length>0
+    const icon=folder?'folder':'page_text'
+    const expand=top||parent_path.includes(item)
+    const item_id_field=item[id_field]
+    const class_def=(item_id_field===start_id?'class=toc_box_selected':'')
+    if (!expand||!folder)
+      return `<li><a ${class_def} href="${href}"><img src="/${icon}.gif">${title}</a></li>`
+    const children=item.children.map(x=>render_toc(x,false)).join('\n')
+    const first_render=render_item(item.children[0])
+    return `<li><a href="${first_render.href}"><img src="/${icon}.gif">${title}</a><ol>${children}</ol></li>`
+    /*for (const parent of parent_path){
+    const selected=parent_path.at(-1)
+    if (selected==null)
+      return ''
+    const {title,href}=render_item(selected)
+    return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
+  }
+  const toc_section=render_toc(parent_path[0],true)
   return {toc:by_id,parent_path,toc_section}
 }
 
@@ -79,16 +99,7 @@ export function mysql_pool<T>(connection:PoolOptions){
   const db = new Kysely<T>({dialect,log:['query']})
   return db
 }
-export interface TocOptions<T extends object> {
-  items: T[];
-  idField: keyof T;
-  parentIdField: keyof T;
-  startId: number;
-}
 
-export type TocNode<T> = T & {
-  children?: TocNode<T>[];
-};
 export function textileToMarkdown(textile: string): string { // https://claude.ai/public/artifacts/04904f93-eb57-442e-afb6-2f0354d1c679
   let markdown = textile;
 
