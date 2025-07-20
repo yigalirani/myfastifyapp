@@ -6,7 +6,7 @@ import { z } from "zod";
 import { marked } from 'marked'
 import fastifyStatic from '@fastify/static';
 import { Kysely} from 'kysely'
-import { writeFile } from 'fs/promises';
+//import { writeFile } from 'fs/promises';
 const config_schema = z.object({
   connectionString: z.string(),
   connection:z.object({
@@ -76,9 +76,9 @@ async function build_server(app:FastifyInstance){
     const content=await async function(){
       if (post==null)
         return print_body({body:'page not found'})
-      writeFile('textile.txt',post.post_content)
+      //writeFile('debug/textile.txt',post.post_content)
       const markdown=utils.textileToMarkdown(post.post_content)
-      writeFile('mark.md',markdown)
+      //writeFile('mark.md',markdown)
       const body=await marked(markdown)
       const {meta,toc_section}=await toc_box_head(cache,post.ID)
       

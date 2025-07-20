@@ -35,6 +35,11 @@ export function tag(content:string|undefined,tag:string){ //is usefull?
   return `<${tag}>content</${tag}>`
 
 }
+function calc_first_non_folder<T>(item:TocItem<T>){
+  if (item.children.length===0)
+    return item
+  return calc_first_non_folder(item.children[0])
+}
 export function generate_toc<T extends Record<string, any>>({items,id_field,parent_id_field,start_id,render_item}:{
   items: T[] //presorted by pos in patnet children order (in the db)
   id_field: keyof T
@@ -65,17 +70,20 @@ export function generate_toc<T extends Record<string, any>>({items,id_field,pare
     return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`
   }()
   function render_toc(item:TocItem<T>,top:boolean):string{
-    const {title,href}=render_item(item)
     const folder=item.children.length>0
+    if (top&&!folder)
+      return ''
+    const {title,href}=render_item(item)
     const icon=folder?'folder':'page_text'
     const expand=top||parent_path.includes(item)
     const item_id_field=item[id_field]
     const class_def=(item_id_field===start_id?'class=toc_box_selected':'')
+    const first_render=render_item(calc_first_non_folder(item))    
     if (!expand||!folder)
-      return `<li><a ${class_def} href="${href}"><img src="/${icon}.gif">${title}</a></li>`
+      return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
     const children=item.children.map(x=>render_toc(x,false)).join('\n')
     const ul= `<ul>${children}</ul>`
-    const first_render=render_item(item.children[0])
+
     if (top)
       return `<h3><a href="${href}">${title}</a></h3>${ul}`
     return `<li><a href="${first_render.href}"><img src="/${icon}.gif">${title}</a>${ul}</li>`
