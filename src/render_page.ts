@@ -70,6 +70,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
               ${div(toc_section, 'toc_box')}
               ${div(post_sidebar, 'post_sidebar')}
               </div>
+              <h1>${post_title}</h1>
               ${div(body, 'content_body')}
               ${div(last, 'toc_box_next_link')}              
        
