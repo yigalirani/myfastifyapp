@@ -74,8 +74,11 @@ export function generate_toc<T extends Record<string, any>>({items,id_field,pare
     if (!expand||!folder)
       return `<li><a ${class_def} href="${href}"><img src="/${icon}.gif">${title}</a></li>`
     const children=item.children.map(x=>render_toc(x,false)).join('\n')
+    const ul= `<ul>${children}</ul>`
     const first_render=render_item(item.children[0])
-    return `<li><a href="${first_render.href}"><img src="/${icon}.gif">${title}</a><ol>${children}</ol></li>`
+    if (top)
+      return `<h3><a href="${href}">${title}</a></h3>${ul}`
+    return `<li><a href="${first_render.href}"><img src="/${icon}.gif">${title}</a>${ul}</li>`
     /*for (const parent of parent_path){
     const selected=parent_path.at(-1)
     if (selected==null)

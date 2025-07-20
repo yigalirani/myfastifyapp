@@ -42,11 +42,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
   <meta http-equiv=Pragma CONTENT=no-cache>
 
   <link rel="stylesheet" href="/style2.css" type="text/css" media="screen" >
-  <style>
-  *{
-    box-sizing: border-box;
-  }
-  </style>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
   <script type="text/javascript" src="/$g->php_dir/script.js"></script>
   ${meta_section}
 
