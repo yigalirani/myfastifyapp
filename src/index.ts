@@ -80,18 +80,14 @@ async function build_server(app:FastifyInstance){
     const page=utils.calc_page(request,reply)   
     if (page==null) return 
     const post=cache.posts_index[page]
-    const content=await async function(){
-      if (post==null)
-        return print_body({body:'page not found'})
-      //writeFile('debug/textile.txt',post.post_content)
-      const markdown=utils.textileToMarkdown(post.post_content)
-      //writeFile('mark.md',markdown)
-      const body=await marked(markdown)
-      const toc=await toc_box_head(cache,post.ID)
-      
-      return print_body({...post,body,menu:cache.menu,...toc})
-    }()
-    reply.type('text/html').send(content)
+    if (post==null)
+      return send_body({body:'page not found'},reply)
+    //writeFile('debug/textile.txt',post.post_content)
+    const markdown=utils.textileToMarkdown(post.post_content)
+    //writeFile('mark.md',markdown)
+    const body=await marked(markdown)
+    const toc=await toc_box_head(cache,post.ID)
+    send_body({...post,body,...toc},reply)
   })
 }
 async function bootstap(){
