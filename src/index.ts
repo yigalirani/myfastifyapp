@@ -1,4 +1,4 @@
-import Fastify,{FastifyInstance,} from 'fastify'
+import Fastify,{FastifyInstance, FastifyReply,} from 'fastify'
 import {DB} from './autogen/database'
 import * as utils from './utils'
 import {print_body} from './render_page'
@@ -55,18 +55,26 @@ async function toc_box_head(cache:Cache,post_id:number) { //starting with this p
     const meta=cache.meta[meta_post_id]
     return {meta,...toc} 
 }
+//type Params = 
 
 
 async function build_server(app:FastifyInstance){
   const {connection}= utils.read_zod('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
   const cache:Cache=await make_cache(db)
+  function send_body(a:Parameters<typeof print_body>[0],reply:FastifyReply){
+    reply.type('text/html').send(print_body({...a,menu:cache.menu}))
+  }  
   app.register(fastifyStatic, {
     root: 'c:/yigal/mc2/images', // Root filesystem path
     prefix: '/', // URL prefix (optional)
     wildcard:false,
     extensions:['.css','.png']
   });
+  app.get('/login',function(req,reply){
+    send_body({body:'todo: print login'},reply)
+  })
+
   app.get(
     '/*', async function handler (request, reply) {
     const page=utils.calc_page(request,reply)   
