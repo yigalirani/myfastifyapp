@@ -3,7 +3,15 @@ import { writeFile } from 'fs/promises';
 import { ZodType } from "zod";
 import { createPool,PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
-import {FastifyReply, FastifyRequest} from 'fastify'
+import {FastifyReply, FastifyRequest,FastifyInstance} from 'fastify'
+import cookie from '@fastify/cookie';
+import { randomUUID } from 'crypto';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    session_id?: string;
+  }
+}
 /*group of gerneric functions with understood input output that can be used in other programs with another databasre schems*/
 export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
   return a[field]
@@ -226,3 +234,20 @@ export function calc_page(req:FastifyRequest,reply:FastifyReply){
     }
     return page
   }
+export function register_session_hook(app:FastifyInstance){
+  app.register(cookie, {
+    parseOptions: {}, // cookie.parse options
+  });  
+  app.addHook('onRequest', async (request, reply) => {
+    let {session_id} = request.cookies;
+    if (!session_id) {
+      session_id = randomUUID();
+      reply.setCookie('session_id', session_id, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        signed: false,
+      });
+    }
+  })
+}

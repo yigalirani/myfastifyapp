@@ -6,14 +6,6 @@ import { z } from "zod";
 import { marked } from 'marked'
 import fastifyStatic from '@fastify/static';
 import { Kysely} from 'kysely'
-
-import cookie from '@fastify/cookie';
-import { randomUUID } from 'crypto';
-declare module 'fastify' {
-  interface FastifyRequest {
-    session_id?: string;
-  }
-}
 //import { writeFile } from 'fs/promises';
 const config_schema = z.object({
   connectionString: z.string(),
@@ -63,16 +55,11 @@ async function toc_box_head(cache:Cache,post_id:number) { //starting with this p
     const meta=cache.meta[meta_post_id]
     return {meta,...toc} 
 }
-//type Params = 
-
-
 async function build_server(app:FastifyInstance){
   const {connection}= utils.read_zod('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
   const cache:Cache=await make_cache(db)
-  app.register(cookie, {
-    parseOptions: {}, // cookie.parse options
-  });
+  utils.register_session_hook(app)
   function send_body(a:Parameters<typeof print_body>[0],reply:FastifyReply){
     reply.type('text/html').send(print_body({...a,menu:cache.menu}))
   }  
@@ -85,20 +72,6 @@ async function build_server(app:FastifyInstance){
   app.get('/login',function(req,reply){
     send_body({body:'todo: print login'},reply)
   })
-
-  app.addHook('onRequest', async (request, reply) => {
-    let {session_id} = request.cookies;
-    if (!session_id) {
-      session_id = randomUUID();
-    reply.setCookie('session_id', session_id, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      signed: false,
-    });
-  }
-
-  });
 
   app.get(
     '/*', async function handler (request, reply) {
