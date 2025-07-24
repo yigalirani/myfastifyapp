@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { writeFile } from 'fs/promises';
+//import { writeFile } from 'fs/promises';
 import { ZodType } from "zod";
 import { createPool,PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'

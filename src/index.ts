@@ -7,6 +7,8 @@ import { marked } from 'marked'
 import fastifyStatic from '@fastify/static';
 import { Kysely} from 'kysely'
 //import { writeFile } from 'fs/promises';
+function onclick(){
+}
 const config_schema = z.object({
   connectionString: z.string(),
   connection:z.object({
@@ -15,7 +17,8 @@ const config_schema = z.object({
     user: z.string(),
     password: z.string(),
     port: z.number(),
-    connectionLimit: z.number()
+    connectionLimit: z.number(),
+    onclick
   })
 });
 
