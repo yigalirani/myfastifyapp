@@ -41,7 +41,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
     return `<div class='${class_name}'>${a}</div>`
   }
   //       ${div(next, 'toc_box_next_link')}
-  return `<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+  return `<!DOCTYPE html>
   <html>
 
   <head>
@@ -52,7 +52,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
 
   <link rel="stylesheet" href="/style2.css" type="text/css" media="screen" >
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-  <script type="text/javascript" src="/$g->php_dir/script.js"></script>
+  <script type="text/javascript" src="/script.js"></script>
   ${meta_section}
 
   <title>${post_title}</title>

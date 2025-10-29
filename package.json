@@ -3,17 +3,21 @@
     "watch_build": "node --watch-path=./src build.mjs",
     "watch_tsc": "tsc --watch",
     "watch_eslint": "node --watch-path=./src --watch-path eslint.config.mjs --watch-path build.mjs  ./run_eslint.mjs",
-    "watch_server": "node --watch dist/index.js"
+    "watch_server": "node --watch dist/index.js",
+    "run_biome": "biome lint",
+    "run_eslint": "node ./run_eslint.mjs",
+    "run_oxlint": "npx oxlint --type-aware"
   },
   "devDependencies": {
     "@eslint/css": "^0.10.0",
     "@eslint/js": "^9.31.0",
+    "@types/marked": "^5.0.2",
     "@types/node": "^24.0.14",
     "esbuild": "0.25.6",
     "eslint": "^9.31.0",
     "eslint-formatter-visualstudio": "^8.40.0",
-    "eslint-plugin-import-x": "^4.16.1",
     "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import-x": "^4.16.1",
     "globals": "^16.3.0",
     "typescript": "5.8.3",
     "typescript-eslint": "^8.36.0"

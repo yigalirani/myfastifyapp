@@ -1,9 +1,9 @@
 import { readFileSync } from 'fs';
 //import { writeFile } from 'fs/promises';
-import { ZodType } from "zod";
-import { createPool,PoolOptions } from 'mysql2' 
+import type { ZodType } from "zod";
+import { createPool,type PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
-import {FastifyReply, FastifyRequest,FastifyInstance} from 'fastify'
+import type {FastifyReply, FastifyRequest,FastifyInstance} from 'fastify'
 import cookie from '@fastify/cookie';
 import { randomUUID } from 'crypto';
 
@@ -13,17 +13,17 @@ declare module 'fastify' {
   }
 }
 /*group of gerneric functions with understood input output that can be used in other programs with another databasre schems*/
-export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
+/*export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
   return a[field]
-}
+}*/
 
-export function index_array<T extends Record<string, any>, K extends keyof T>(
+export function index_array<T extends Record<string, PropertyKey|null>, K extends keyof T>(
   items: T[],
   key: K
 ): Record<PropertyKey, T> {
   const ans:Record<PropertyKey, T>={}
   for (const item of items) {
-    const keyValue = item[key];
+    const keyValue = item[key] ;
     ans[keyValue] = item;
   }
   return ans;
@@ -121,7 +121,7 @@ export function generate_toc<T extends Record<string, any>>({items,id_field,pare
 
 
 export function read_zod<T>(filename: string, schema: ZodType<T>): T {
-  const config_data = readFileSync(filename, 'utf-8');  //read sync so doent need the buildfasity pattern
+  const config_data = readFileSync(filename, 'utf8');  //read sync so doent need the buildfasity pattern
   return schema.parse(JSON.parse(config_data));
 }
 export function mysql_pool<T>(connection:PoolOptions){
@@ -136,9 +136,7 @@ export function textileToMarkdown(textile: string): string { // https://claude.a
   let markdown = textile;
 
   // Headers
-  markdown = markdown.replace(/^h([1-6])\.\s+(.+)$/gm, (match, level, content) => {
-    return '#'.repeat(parseInt(level)) + ' ' + content;
-  });
+  markdown = markdown.replace(/^h([1-6])\.\s+(.+)$/gm, (match, level, content) => '#'.repeat(parseInt(level,10)) + ' ' + content)
 
   // Bold text
   markdown = markdown.replace(/\*([^*]+)\*/g, '**$1**');
@@ -209,7 +207,6 @@ export class Timer{
     this.last=this.start
   }
   point(name:string){
-    return
     const now=performance.now()
     console.log(`${name} ${now-this.start} ${now-this.last}`)
     this.last=now

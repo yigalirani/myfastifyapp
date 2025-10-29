@@ -1,0 +1,96 @@
+{
+  "ignorePatterns": ["main/old","converter_old","main/unused_code","main/try","**/old/","**/*.mjs","/scripts","main/ext","main/bookmarks"],
+  "env": {
+    "node": true,
+    "browser":true,
+    "webextensions":true
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "pedantic":"warn",
+    "perf": "warn",
+    "style": "warn",
+    "restriction": "warn",
+    "nursery": "warn"
+  },
+  "rules":{
+    "no-magic-numbers": "off",
+    "no-unused-vars":"warn",//becaus biome does it
+    "unicorn/filename-case":"off",//dumb rule wtf
+    "eslint/sort-imports":"off",
+    "typescript/array-type":"off",
+    "eslint/func-style":"off",
+    "eslint/no-eq-null":"off",
+    "typescript/explicit-function-return-type":"off",
+    "eslint/curly":"off",
+    "unicorn/no-null":"off",
+    "eslint/id-length":"off",
+    "eslint/no-plusplus":"off",
+    "typescript/explicit-module-boundary-types":"off",
+    "eslint/no-continue":"off",
+    "oxc/no-rest-spread-properties":"off",
+    "eslint/func-names":"off",
+    "eslint/eqeqeq": ["error", "always", {"null": "ignore"}],
+    "eslint/sort-keys":"off",
+    "eslint/max-lines-per-function":"off",
+    "oxc/no-optional-chaining":"off",
+    "eslint/prefer-template":"off",//biome does it better with auto fix
+    "typescript/consistent-generic-constructors":"off", //not sure abouit it 
+    "eslint/no-console":"off",
+    "oxc/no-async-await":"off",
+    "eslint/max-lines":"off",
+    "unicorn/catch-error-name":"off", //todo
+    "eslint/no-undefined":"off",//not usefull for my for exanpple weakref.deref rereurn undefind if object was garbage collected
+    "eslint/no-ternary":"off",//dumb, ternatry is super useful
+    "eslint/no-throw-literal":"off", //i actualy rather yes throw liternal becuase its less code. question: do i need the stack? mabe yes, todo
+    "eslint/no-void":"off",//void is super usefull foe example to mark class functions as not using the this
+    "eslint/max-classes-per-file":"off",
+    "eslint/no-lonely-if":"off", //i prefer lonly if of eselif
+    "unicorn/no-lonely-if":"off",
+    "eslint/prefer-destructuring":"off",
+    "unicorn/prefer-string-replace-all":"off",
+    "unicorn/explicit-length-check":"off",
+    "typescript/no-non-null-assertion":"off",
+    "unicorn/escape-case":"off",
+    "unicorn/no-hex-escape":"off",
+    "unicorn/prefe-modern-dom-apis":"off",
+    "eslint/new-cap":"off",
+    "eslint/init-declarations":"off",
+    "unicorn/prefer-structured-clone":"off",//todo
+    "unicorn/prefer-set-has":"off", //todo
+    "typescript/consistent-indexed-object-style":"off",//todo
+    "unicorn/prefer-query-selector":"off", //i actualy prefer query by id for this project
+    "unicorn/prefer-number-properties":"off", //todo, maybe
+    "unicorn/new-for-builtins":"off",
+    "typescript/no-dynamic-delete":"off",
+    "unicorn/prefer-dom-node-append":"off",
+    "unicorn/prefer-dom-node-remove":"off",
+    "eslint/no-multi-assign":"off",
+    "unicorn/prefer-add-event-listener":"off",//todo, maybe
+    "eslint/max-depth":"off",//owseome rule, todo
+    "unicorn/prefer-global-this":"off", //maybe todo
+    "typescript/ban-ts-comment":"off",
+    "eslint/no-negated-condition":"off", //dumbest rule ever
+    "unicorn/prefer-string-slice":"off", //maybe todo
+    "unicorn/no-await-expression-member":"off", //maybe todo
+    "eslint/no-alert":"off",
+    "unicorn/no-array-for-each":"off", //todo
+    "typescript/prefer-for-of":"off",//todo
+    "unicorn/prefer-node-protocol":"off", //todo
+    "eslint/guard-for-in":"off", //dumb
+    "unicorn/consistent-function-scoping":"off", //todo maybe
+    "no-confusing-void-expression":"off",
+    "@typescript-eslint/no-unsafe-type-assertion":"off",//todo maybe
+    "only-throw-error":"off", //todo maybe
+    "return-await":"off",
+    "typescript-eslint/no-use-before-defdine":"warn",
+    "unicorn/prefer-modern-dom-apis":"off",
+    "eslint/class-methods-use-this":"off",
+    "eslint/no-return-assign":"off",
+    "eslint/no-param-reassign":"off",//nitrrogen is based on param reasigna
+    "unicorn/no-array-callback-reference":"off",//it does make sense, todo
+    "eslint/no-warning-comments":"off",//just a silly warrning that disallow todo
+    "unicorn/prefer-top-level-await":"off" //top level await causes other problems
+  }
+}

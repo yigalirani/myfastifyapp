@@ -1,0 +1,62 @@
+{
+  "files": {
+    "includes": [
+      "**/src/**",
+      "!**/tmp2",
+      "!**/dist",
+      "!converter_old",
+      "!types",
+      "!**/*.json"
+    ]
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  },
+  "json": {
+    "linter": {
+      "enabled": false
+    }
+  },
+  "linter": {
+    "rules": {
+      "correctness":"on",
+      "correctness":{
+        "noUnusedFunctionParameters":"off",
+        "noConstantCondition":"off",
+        "noUnusedImports":"off",
+        "noUnreachable":"off"
+      },
+      "performance":"on",
+      "performance": {
+        "noNamespaceImport": "off"
+      },
+      "nursery": "warn",
+      "nursery":{
+      "useExplicitType":"off",
+        "useMaxParams":"off"
+      },
+      "suspicious": "on",
+      "suspicious": {
+        "noConsole":"off",
+        "noConfusingVoidType":"off",
+        "noExplicitAny":"off",
+        "noDebugger":"off"
+      },
+      "complexity": "on",
+      "complexity": {
+        "useArrowFunction": "off",
+        "useOptionalChain": "off",
+        "noExcessiveCognitiveComplexity": "off"
+      },
+      "style":"on",
+      "style": {
+        "noNonNullAssertion": "off",
+        "useTemplate": "warn"
+      }
+    }
+  }
+}

@@ -1,14 +1,12 @@
-import Fastify,{FastifyInstance, FastifyReply,} from 'fastify'
-import {DB} from './autogen/database'
+import Fastify,{type FastifyInstance, type FastifyReply} from 'fastify'
+import type {DB} from './autogen/database'
 import * as utils from './utils'
 import {print_body} from './render_page'
 import { z } from "zod";
 import { marked } from 'marked'
 import fastifyStatic from '@fastify/static';
-import { Kysely} from 'kysely'
+import type { Kysely} from 'kysely'
 //import { writeFile } from 'fs/promises';
-function onclick(){
-}
 const config_schema = z.object({
   connectionString: z.string(),
   connection:z.object({
@@ -17,8 +15,7 @@ const config_schema = z.object({
     user: z.string(),
     password: z.string(),
     port: z.number(),
-    connectionLimit: z.number(),
-    onclick
+    connectionLimit: z.number()
   })
 });
 
@@ -26,7 +23,7 @@ async function print_menu(db:Kysely<DB>) {
   const rows=await db.selectFrom('menu_view').selectAll().execute()
   return rows.map(({post_name,post_title,menu_script})=>{
     if (menu_script)
-      return `<a href='/$g->php_dir/$script'>${post_title}</a>`
+      return `<a href='/buy'>${post_title}</a>`
     return `<a href='/${post_name}.htm'>${post_title}</a>`
   }).join('\n')
 }
@@ -41,7 +38,7 @@ async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when neede
   }
 }
 type Cache=Awaited<ReturnType<typeof make_cache>>
-async function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
+function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
     const toc=utils.generate_toc({
       items:cache.posts,  
       id_field:'ID',
