@@ -12,4 +12,4 @@ async function f(){
   })
 } 
  
-run_func({f,title:'build',watchfiles:['src','build.ts']})
+run_func({f,title:'build',watchfiles:['src']})

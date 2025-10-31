@@ -38,7 +38,6 @@ export async function run_func({f,filter,title,watchfiles=[]}:{
     console.log(`starting ${title||''} ${reason}`)
     const start=Date.now()
     try{
-
       await f()
       const end=Date.now()  
       const duration=(end-start)

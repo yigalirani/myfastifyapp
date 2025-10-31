@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "watch_build": "node --watch-path=./src build.ts",
+    "watch_build": "node build.ts",
     "watch_tsc": "tsc --watch",
     "watch_eslint": "node --watch-path=./src --watch-path eslint.config.mjs --watch-path build.ts  ./run_eslint.ts",
     "watch_server": "node --watch dist/index.js",
