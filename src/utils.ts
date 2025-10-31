@@ -1,11 +1,15 @@
-import { readFileSync } from 'fs';
+// oxlint-disable no-unsafe-call
+// oxlint-disable no-unsafe-assignment
+// oxlint-disable no-unsafe-member-access
+
+import { readFileSync } from 'node:fs';
 //import { writeFile } from 'fs/promises';
 import type { ZodType } from "zod";
 import { createPool,type PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
 import type {FastifyReply, FastifyRequest,FastifyInstance} from 'fastify'
 import cookie from '@fastify/cookie';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -23,7 +27,8 @@ export function index_array<T extends Record<string, PropertyKey|null>, K extend
 ): Record<PropertyKey, T> {
   const ans:Record<PropertyKey, T>={}
   for (const item of items) {
-    const keyValue = item[key] ;
+    const keyValue = item[key];
+    if (keyValue == null) continue;
     ans[keyValue] = item;
   }
   return ans;
@@ -50,7 +55,7 @@ function calc_first_non_folder<T>(item:TocItem<T>){
 }
 
 
-export function generate_toc<T extends Record<string, any>>({items,id_field,parent_id_field,start_id,render_item}:{
+export function generate_toc<T extends Record<string, PropertyKey|null>>({items,id_field,parent_id_field,start_id,render_item}:{
   items: T[] //presorted by pos in patnet children order (in the db)
   id_field: keyof T
   parent_id_field: keyof T
@@ -60,7 +65,11 @@ export function generate_toc<T extends Record<string, any>>({items,id_field,pare
   const enhanced_items=items.map(make_item)
   const by_id=index_array(enhanced_items,id_field)
   for (const item of enhanced_items){
-    const item_parent_id:PropertyKey=item[parent_id_field]
+    if (item==null)
+      continue
+    const item_parent_id=item.parent_id_field
+    if (item_parent_id==null)
+      continue
     const parent_item=by_id[item_parent_id]
     if (parent_item==null)
       continue
@@ -71,15 +80,20 @@ export function generate_toc<T extends Record<string, any>>({items,id_field,pare
   const parent_path:TocItem<T>[]=[]
   while(cur_item!=null){
     parent_path.unshift(cur_item)
-    cur_item=by_id[cur_item[parent_id_field]]
+    const parent_id=cur_item[parent_id_field]
+    if (parent_id==null)
+      break
+    cur_item=by_id[parent_id]
   }
   function calc_next(item:TocItem<T>,dpos:number,caption:string ){
     const parent_id=item[parent_id_field]
+    if (parent_id==null)
+      return
     const parent=by_id[parent_id]
     if (parent==null)
       return 
     // eslint-disable-next-line eqeqeq
-    const pos=parent.children.findIndex(x=>x==item)
+    const pos=parent.children.indexOf(item)
     const ans=parent.children[pos+dpos]
     if (ans!=null){
       const {title,href}=render_item(ans)
@@ -132,73 +146,6 @@ export function mysql_pool<T>(connection:PoolOptions){
   return db
 }
 
-export function textileToMarkdown(textile: string): string { // https://claude.ai/public/artifacts/04904f93-eb57-442e-afb6-2f0354d1c679
-  let markdown = textile;
-
-  // Headers
-  markdown = markdown.replace(/^h([1-6])\.\s+(.+)$/gm, (match, level, content) => '#'.repeat(parseInt(level,10)) + ' ' + content)
-
-  // Bold text
-  markdown = markdown.replace(/\*([^*]+)\*/g, '**$1**');
-
-  // Italic text - only convert underscores surrounded by whitespace or line boundaries
-  markdown = markdown.replace(/(^|\s)_([^_]+)_(\s|$)/g, '$1*$2*$3');
-
-  // Code spans
-  markdown = markdown.replace(/@([^@]+)@/g, '`$1`');
-
-  // Strike-through - only convert ASCII hyphen-minus (U+002D) surrounded by whitespace or line boundaries
-  //markdown = markdown.replace(/(^|\s)\u002D([^\u002D]+)\u002D(\s|$)/g, '$1~~$2~~$3');
-
-  // Links - stop at punctuation that's typically not part of URLs (but allow periods and common URL chars)
-
-  markdown = markdown.replace(/"([^"]*)":([^\s|,]+)/gm, '[$1]($2)');
-
-
-  // Images
-  markdown = markdown.replace(/!([^!]+)!/g, '![]($1)');
-  markdown = markdown.replace(/!([^!]+)\(([^)]+)\)!/g, '![$2]($1)');
-
-  // Lists - unordered
-  markdown = markdown.replace(/^\*\s+(.+)$/gm, '- $1');
-  markdown = markdown.replace(/^\*{2}\s+(.+)$/gm, '  - $1');
-  markdown = markdown.replace(/^\*{3}\s+(.+)$/gm, '    - $1');
-
-  // Lists - ordered
-  markdown = markdown.replace(/^#\s+(.+)$/gm, '1. $1');
-  markdown = markdown.replace(/^#{2}\s+(.+)$/gm, '  1. $1');
-  markdown = markdown.replace(/^#{3}\s+(.+)$/gm, '    1. $1');
-
-  // Block quotes
-  markdown = markdown.replace(/^bq\.\s+(.+)$/gm, '> $1');
-
-  // Code blocks
-  markdown = markdown.replace(/^bc\.\s*$/gm, '```');
-  markdown = markdown.replace(/^bc\.\s+(.+)$/gm, '```\n$1\n```');
-
-  // Preformatted text
-  markdown = markdown.replace(/^pre\.\s+(.+)$/gm, '```\n$1\n```');
-
-  // Tables - basic conversion
-  markdown = markdown.replace(/^\|(.+)\|$/gm, (match, content) => {
-    const cells = content.split('|').map((cell: string) => cell.trim());
-    return '| ' + cells.join(' | ') + ' |';
-  });
-
-  // Table headers (Textile |_. header |_. header | becomes Markdown header row)
-  markdown = markdown.replace(/\|_\.\s*([^|]+)/g, '| $1');
-  
-  // Add table separator after first table row
-  markdown = markdown.replace(/(^\|[^|]*\|.*$)/gm, (match, line) => {
-    const cellCount = (line.match(/\|/g) || []).length - 1;
-    const separator = '|' + ' --- |'.repeat(cellCount);
-    return line + '\n' + separator;
-  });
-
-
-
-  return markdown;
-}
 export class Timer{
   start=performance.now()
   last=this.start

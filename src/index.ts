@@ -1,6 +1,8 @@
 import Fastify,{type FastifyInstance, type FastifyReply} from 'fastify'
 import type {DB} from './autogen/database'
 import * as utils from './utils'
+import * as textile from './textile'
+
 import {print_body} from './render_page'
 import { z } from "zod";
 import { marked } from 'marked'
@@ -78,19 +80,19 @@ async function build_server(app:FastifyInstance){
     const page=utils.calc_page(request,reply)   
     if (page==null) return 
     const post=cache.posts_index[page]
-    if (post==null)
+    if (post===null)
       return send_body({body:'page not found'},reply)
     //writeFile('debug/textile.txt',post.post_content)
-    const markdown=utils.textileToMarkdown(post.post_content)
+    const markdown=textile.textileToMarkdown(post.post_content)
     //writeFile('mark.md',markdown)
     const body=await marked(markdown)
-    const toc=await toc_box_head(cache,post.ID)
+    const toc= toc_box_head(cache,post.ID)
     send_body({...post,body,...toc},reply)
   })
 }
 async function bootstap(){
   const app = Fastify({logger: true})
   await build_server(app)
-  app.listen({ port: 3000 })
+  await app.listen({ port: 3000 })
 }
-bootstap()
+void bootstap()

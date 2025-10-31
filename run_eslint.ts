@@ -1,8 +1,8 @@
-const { spawn } = await import('node:child_process');
+import { spawn } from 'node:child_process';
 
 function makeFilter() {
   let count = 0;
-  return function (txt) {
+  return function (txt:string) {
     const lines = txt.split('\n').filter(x => x.includes('Linting code'));
     const ans = [];
     for (const line of lines) {
@@ -23,10 +23,14 @@ const start=Date.now()
 const child = spawn(cmd, { shell: true });
 
 child.stdout.on('data', (data) => {
+  if (typeof data!=='string')
+    return
   process.stdout.write(data);
 });
 
 child.stderr.on('data', (data) => {
+  if (typeof data!=='string')
+    return  
   const filtered = filterit(data.toString());
   if (filtered) console.error(filtered);
 });

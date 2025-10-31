@@ -1,5 +1,5 @@
 {
-  "ignorePatterns": ["main/old","converter_old","main/unused_code","main/try","**/old/","**/*.mjs","/scripts","main/ext","main/bookmarks"],
+  "ignorePatterns": ["main/old","converter_old","main/unused_code","main/try","**/old/","**/*.mjs","/scripts","main/ext","main/bookmarks","src/textile.ts"],
   "env": {
     "node": true,
     "browser":true,
@@ -91,6 +91,7 @@
     "eslint/no-param-reassign":"off",//nitrrogen is based on param reasigna
     "unicorn/no-array-callback-reference":"off",//it does make sense, todo
     "eslint/no-warning-comments":"off",//just a silly warrning that disallow todo
-    "unicorn/prefer-top-level-await":"off" //top level await causes other problems
+    "unicorn/prefer-top-level-await":"off", //top level await causes other problems
+    "unicorn/no-empty-file":"off" //i do have files that contain only commented out code. nothing wrong with that
   }
 }

@@ -10,8 +10,8 @@
     "outDir": "types",
     "rootDir":".",
     "typeRoots": ["./node_modules/@types"],
-    "moduleResolution":"nodenext",
-    "module": "nodenext"
+    "moduleResolution":"bundler",
+    "module": "preserve"
   },
   "include":["src/**/*"]  
 }

@@ -16,7 +16,7 @@ function tag(a:string|undefined,tag_name:string){
   return `<${tag_name}>${a}</${tag_name}>`
 }
 
-export function print_body({ meta, post_sidebar, post_title, login_menu, menu, body, toc_section,next,last }: {
+export function print_body({ meta, post_sidebar, post_title, login_menu, menu, body, toc_section,/*next,*/last }: {
   meta?:Meta
   post_sidebar?:string
   post_title?:string

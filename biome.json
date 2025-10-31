@@ -6,7 +6,8 @@
       "!**/dist",
       "!converter_old",
       "!types",
-      "!**/*.json"
+      "!**/*.json",
+      "!**/autogen/**"
     ]
   },
   "assist": {

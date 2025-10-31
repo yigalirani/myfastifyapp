@@ -190,10 +190,10 @@
   {
     "languageOptions": {
       "parser": {
-        "version": "8.36.0",
+        "version": "8.46.2",
         "meta": {
           "name": "typescript-eslint/parser",
-          "version": "8.36.0"
+          "version": "8.46.2"
         }
       },
       "sourceType": "module"
@@ -397,6 +397,9 @@
         "CSSFontFaceRule": false,
         "CSSFontFeatureValuesRule": false,
         "CSSFontPaletteValuesRule": false,
+        "CSSFunctionDeclarations": false,
+        "CSSFunctionDescriptors": false,
+        "CSSFunctionRule": false,
         "CSSGroupingRule": false,
         "CSSImageValue": false,
         "CSSImportRule": false,
@@ -1133,6 +1136,11 @@
         "SnapEvent": false,
         "SourceBuffer": false,
         "SourceBufferList": false,
+        "SpeechGrammar": false,
+        "SpeechGrammarList": false,
+        "SpeechRecognition": false,
+        "SpeechRecognitionErrorEvent": false,
+        "SpeechRecognitionEvent": false,
         "speechSynthesis": false,
         "SpeechSynthesis": false,
         "SpeechSynthesisErrorEvent": false,
@@ -1426,10 +1434,10 @@
         "XSLTProcessor": false
       },
       "parser": {
-        "version": "8.36.0",
+        "version": "8.46.2",
         "meta": {
           "name": "typescript-eslint/parser",
-          "version": "8.36.0"
+          "version": "8.46.2"
         }
       },
       "ecmaVersion": 2022,
