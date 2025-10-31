@@ -182,7 +182,7 @@ export function register_session_hook(app:FastifyInstance){
   app.register(cookie, {
     parseOptions: {}, // cookie.parse options
   });  
-  app.addHook('onRequest', async (request, reply) => {
+  app.addHook('onRequest',  (request, reply) => {
     let {session_id} = request.cookies;
     if (!session_id) {
       session_id = randomUUID();
@@ -193,5 +193,6 @@ export function register_session_hook(app:FastifyInstance){
         signed: false,
       });
     }
+    return
   })
 }

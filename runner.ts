@@ -1,51 +1,72 @@
 
 import { spawn } from 'node:child_process';
 import { watch } from 'node:fs';
-export function run(cmd:string,filter:string){
-  console.log(cmd)
-  const start=Date.now()
-  const child = spawn(cmd, { shell: true,env: { ...process.env, FORCE_COLOR: '1' }, });
+async function run_cmd({
+  cmd,
+  filter,
+}: {
+  cmd: string;
+  filter?: string;
+}) {
+  return await new Promise((resolve, reject) => {
+    const child = spawn(cmd, {
+      shell: true,
+      env: { ...process.env, FORCE_COLOR: "1" },
+    });
 
-  child.stdout.on('data', (data) => {
-      process.stderr.write(data instanceof Uint8Array?data:String(data));
-  });
+    child.stdout.on("data", (data) => {
+      const output = String(data)
+      if (!filter || output.includes(filter)) {
+        process.stderr.write(output);
+      }
+    });
 
-  child.stderr.on('data', (data) => {
-      process.stderr.write(data instanceof Uint8Array?data:String(data));
-  });
+    child.stderr.on("data", (data) => {
+      const output = String(data)
+      if (!filter || output.includes(filter)) {
+        process.stderr.write(output);
+      }
+    });
 
-  child.on('close', (code) => {
-    const end=Date.now()
-    const duration=(end-start)
-    console.warn(`process exited with code ${code} ${duration} ms`);
+    child.on("close", (code) => {
+      console.warn(`process exited with code ${code}`);
+      resolve(null);
+    });
+
+    child.on("error", (err) => {
+      reject(err);
+    });
   });
 }
 async function sleep(ms:number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return await new Promise(resolve => setTimeout(resolve, ms));
 }
-  const originalLog = console.log;
-export async function run_func({f,filter,title,watchfiles=[]}:{
-  f:()=>Promise<void>
-  filter?:string
+export async function run({f,title,watchfiles=[],filter}:{
+  f:string|(()=>Promise<void>)
   title?:string
-  watchfiles:string[]
+  watchfiles?:string[]
+  filter?:string
 }){
+  const effective_title=(typeof f==='string'?f:title)
   let last_run=0
   let last_changed=0
   let filename_changed=''
   async function runit(reason:string){
     last_run=Date.now()
-    console.log(`starting ${title||''} ${reason}`)
+    console.log(`starting ${effective_title||''} ${reason}`)
     const start=Date.now()
     try{
-      await f()
+      if (typeof f==='string')
+        await run_cmd({cmd:f,filter})
+      else
+        await f()
       const end=Date.now()  
       const duration=(end-start)
-      console.log(`done ${title||''} ${duration} ms`)
+      console.log(`done ${effective_title||''} ${duration} ms`)
     }catch(ex){
      const end=Date.now()  
       const duration=(end-start)
-      console.log(`failed ${title||''} ${duration} ms: ${String(ex)}`)      
+      console.log(`failed ${effective_title||''} ${duration} ms: ${String(ex)}`)      
     }
   }
   runit('initial')

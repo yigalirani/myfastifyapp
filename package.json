@@ -4,9 +4,9 @@
     "watch_tsc": "tsc --watch",
     "watch_eslint": "node --watch-path=./src --watch-path eslint.config.mjs --watch-path build.ts  ./run_eslint.ts",
     "watch_server": "node --watch dist/index.js",
-    "run_biome": "node --watch-path=./src runner.ts biome lint",
+    "run_biome": "node ./run_biome.ts",
     "run_eslint": "node ./run_eslint.ts",
-    "run_oxlint": "node --watch-path=./src runner.ts oxlint --type-aware"
+    "run_oxlint": "node ./run_oxclint.ts"
   },
   "devDependencies": {
     "@eslint/css": "^0.14.0",

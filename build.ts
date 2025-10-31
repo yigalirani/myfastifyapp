@@ -1,5 +1,5 @@
 import * as esbuild from 'esbuild'
-import {run_func} from './runner.ts'
+import {run} from './runner.ts'
 async function f(){
   await esbuild.build({ 
     entryPoints: ['src/index.ts'],
@@ -12,4 +12,4 @@ async function f(){
   })
 } 
  
-run_func({f,title:'build',watchfiles:['src']})
+run({f,title:'build',watchfiles:['src','package.json','tsconfig.json']})
