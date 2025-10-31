@@ -10,6 +10,6 @@ async function f(){
     target: 'node10',
     minifySyntax:false,
   })
-}
+} 
  
-run_func({f,title:'build'})
+run_func({f,title:'build',watchfiles:['src','build.ts']})

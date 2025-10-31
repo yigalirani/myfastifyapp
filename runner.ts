@@ -1,5 +1,6 @@
 
 import { spawn } from 'node:child_process';
+import { watch } from 'node:fs';
 export function run(cmd:string,filter:string){
   console.log(cmd)
   const start=Date.now()
@@ -19,16 +20,50 @@ export function run(cmd:string,filter:string){
     console.warn(`process exited with code ${code} ${duration} ms`);
   });
 }
-export async function run_func({f,filter,title}:{
+async function sleep(ms:number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+  const originalLog = console.log;
+export async function run_func({f,filter,title,watchfiles=[]}:{
   f:()=>Promise<void>
   filter?:string
   title?:string
+  watchfiles:string[]
 }){
-  console.log(`starting ${title||''}`)
-  
-  const start=Date.now()
-  await f()
-  const end=Date.now()  
-  const duration=(end-start)
-  console.log(`done ${title||''} ${duration} ms`)
+  let last_run=0
+  let last_changed=0
+  let filename_changed=''
+  async function runit(reason:string){
+    last_run=Date.now()
+    console.log(`starting ${title||''} ${reason}`)
+    const start=Date.now()
+    try{
+
+      await f()
+      const end=Date.now()  
+      const duration=(end-start)
+      console.log(`done ${title||''} ${duration} ms`)
+    }catch(ex){
+     const end=Date.now()  
+      const duration=(end-start)
+      console.log(`failed ${title||''} ${duration} ms: ${String(ex)}`)      
+    }
+  }
+  runit('initial')
+  for (const filename of watchfiles){
+    watch(filename,{},(eventType, filename) => {
+      //console.log(`changed: ${filename} ,${eventType}`);
+      last_changed=Date.now()
+      if (filename!=null)
+        filename_changed=filename
+    })
+  }
+  while(true){
+    if (last_changed>last_run){
+      // oxlint-disable-next-line no-await-in-loop
+      await runit(`file changed ${filename_changed}`) 
+    }
+    // oxlint-disable-next-line no-await-in-loop
+    await sleep(1000)
+  }
 }
