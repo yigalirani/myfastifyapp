@@ -41,6 +41,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
     return `<div class='${class_name}'>${a}</div>`
   }
   //       ${div(next, 'toc_box_next_link')}
+  const logo=((meta?.meta_logo) || '')
   return `<!DOCTYPE html>
   <html>
 
@@ -62,7 +63,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
       <div class="wrapper">
         <div class="header">
           <a href='/cart_show'><img class=shop_header_icon src=/cart.png></a>
-                                  ${meta?.meta_logo || ''}
+                                  ${logo}
            ${div(login_menu, 'header_login')}
           <div class=header_logo>
             <a href='/' ><img src='/logo.png' alt="xml marker"></a>

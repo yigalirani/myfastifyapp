@@ -12,4 +12,4 @@ async function f(){
   })
 } 
  
-run({f,title:'build',watchfiles:['src','package.json','tsconfig.json']})
+await run({f,title:'build',watchfiles:['src','package.json','tsconfig.json']})

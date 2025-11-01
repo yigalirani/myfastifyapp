@@ -24,7 +24,7 @@ const config_schema = z.object({
 async function print_menu(db:Kysely<DB>) {
   const rows=await db.selectFrom('menu_view').selectAll().execute()
   return rows.map(({post_name,post_title,menu_script})=>{
-    if (menu_script)
+    if (menu_script!=null)
       return `<a href='/buy'>${post_title}</a>`
     return `<a href='/${post_name}.htm'>${post_title}</a>`
   }).join('\n')

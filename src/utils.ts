@@ -92,7 +92,6 @@ export function generate_toc<T extends Record<string, PropertyKey|null>>({items,
     const parent=by_id[parent_id]
     if (parent==null)
       return 
-    // eslint-disable-next-line eqeqeq
     const pos=parent.children.indexOf(item)
     const ans=parent.children[pos+dpos]
     if (ans!=null){
@@ -184,7 +183,7 @@ export function register_session_hook(app:FastifyInstance){
   });  
   app.addHook('onRequest',  (request, reply) => {
     let {session_id} = request.cookies;
-    if (!session_id) {
+    if (session_id==null) {
       session_id = randomUUID();
       reply.setCookie('session_id', session_id, {
         path: '/',

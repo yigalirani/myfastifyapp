@@ -12,7 +12,8 @@
     "typeRoots": ["./node_modules/@types"],
     "moduleResolution":"bundler",
     "module": "preserve",
-    "allowImportingTsExtensions":true
+    "allowImportingTsExtensions":true,
+    "allowJs": true
   },
-  "include":["src/**/*","*"]  
+  "include":["src/**/*","scripts/**/*","eslint.config.mjs" ]
 }

@@ -43,9 +43,12 @@ function make_filter_stream(filter:FilterFunc){
     }
   }
 }
+function allways_true(_a:string){
+  return true
+}
 async function run_cmd({
   cmd,
-  filter=(_a:string)=>true,
+  filter=allways_true,
 }: {
   cmd: string;
   filter?: FilterFunc;
@@ -85,7 +88,13 @@ export async function run({f,title,watchfiles=[],filter}:{
   watchfiles?:string[]
   filter?:FilterFunc
 }){
-  const effective_title=(typeof f==='string'?f:title)
+  const effective_title=function(){
+    if (title!=null)
+      return title
+    if (typeof f==='string')
+      return f
+    return ''
+  }()
   let last_run=0
   let last_changed=0
   let filename_changed=''

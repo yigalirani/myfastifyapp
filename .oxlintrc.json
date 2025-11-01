@@ -92,6 +92,7 @@
     "unicorn/no-array-callback-reference":"off",//it does make sense, todo
     "eslint/no-warning-comments":"off",//just a silly warrning that disallow todo
     "unicorn/prefer-top-level-await":"off", //top level await causes other problems
-    "unicorn/no-empty-file":"off" //i do have files that contain only commented out code. nothing wrong with that
+    "unicorn/no-empty-file":"off", //i do have files that contain only commented out code. nothing wrong with that
+    "@typescript-eslint/strict-boolean-expressions": "off"
   }
 }

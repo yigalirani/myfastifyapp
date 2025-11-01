@@ -5,7 +5,8 @@ import globals from 'globals';
 import { defineConfig, globalIgnores } from "eslint/config";
 console.log('import.meta.dirname',import.meta.dirname)
 export default defineConfig(
-  globalIgnores(["**/dist/", "**/types/", '**/tmp2/', '**/tmp/', '**/unused_code/', '**/old', '**/converter_old/', '**/try/','**/node_modules/','**/*.mjs',"**/*.js"]),
+
+  globalIgnores(["**/dist/", "**/types/",'**/node_modules/','src/textile.ts']),
   eslint.configs.recommended, //taking all rules from eslint, truning select ones off below
   //tseslint.configs.recommended,
   //tseslint.configs.recommendedTypeChecked,
@@ -13,6 +14,7 @@ export default defineConfig(
   {
     languageOptions: {
       parserOptions: {
+        allowDefaultProject:true,
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
@@ -59,7 +61,8 @@ export default defineConfig(
       "eqeqeq": ["error", "always", { "null": "ignore" }],
       "@typescript-eslint/require-await":"off",//becuse oxc can do it
       "@typescript-eslint/promise-function-async":"off", //moved to oxc
-      "no-constant-condition":"off"
+      "no-constant-condition":"off",
+      "@typescript-eslint/unified-signatures":"off"//rule crashes in my case
     },
     languageOptions: {
       globals: {
