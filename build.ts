@@ -1,11 +1,11 @@
 import * as esbuild from 'esbuild'
-import {run} from './runner'
+import {run} from './runner.ts'
 async function f(){
   await esbuild.build({ 
     entryPoints: ['src/index.ts'],
     platform: 'node',
     bundle: true,
-    outdir: './dist',
+    outdir: './dist', 
     sourcemap: true,
     target: 'node10',
     minifySyntax:false,

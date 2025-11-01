@@ -17,7 +17,7 @@ const config_schema = z.object({
     user: z.string(),
     password: z.string(),
     port: z.number(),
-    connectionLimit: z.number()
+    connectionLimit: z.number() 
   })
 });
 

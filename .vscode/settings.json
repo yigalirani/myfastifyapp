@@ -1,6 +1,5 @@
 {
   "typescript.tsdk": "node_modules\\typescript\\lib",
   "oxc.typeAware": true,
-  "oxc.enable": true,
-  "oxc.path.server": "node"
+   "eslint.experimental.useFlatConfig": true
 }

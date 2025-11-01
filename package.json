@@ -1,29 +1,12 @@
 {
   "scripts": {
-    "watch_build": "node build.ts",
-    "watch_tsc": "tsc --watch",
-    "watch_eslint": "node  ./run_eslint.ts",
-    "watch_server": "node --watch dist/index.js",
-    "run_biome": "node ./run_biome.ts",
-    "run_eslint": "node ./run_eslint.ts",
-    "run_oxlint": "node ./run_oxclint.ts"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.3.2",
-    "@eslint/compat": "^1.4.1",
-    "@eslint/css": "^0.14.0",
-    "@eslint/js": "^9.39.0",
-    "@types/node": "^24.9.2",
-    "esbuild": "0.25.11",
-    "eslint": "^9.39.0",
-    "eslint-formatter-visualstudio": "^9.0.1",
-    "eslint-import-resolver-typescript": "^4.4.4",
-    "eslint-plugin-import-x": "^4.16.1",
-    "globals": "^16.4.0",
-    "kysely-codegen": "^0.19.0",
-    "oxlint-tsgolint": "0.4.0",
-    "typescript": "5.9.3",
-    "typescript-eslint": "^8.46.2"
+    "run_biome"    : "node ./run_biome.ts",
+    "run_eslint"   : "node ./run_eslint.ts",
+    "run_oxlint"   : "node ./run_oxclint.ts",
+    "watch_build"  : "node ./build.ts",
+    "watch_eslint" : "node  ./run_eslint.ts",
+    "watch_server" : "node --watch dist/index.js",
+    "watch_tsc"    : "tsc --watch"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
@@ -32,8 +15,25 @@
     "kysely": "^0.28.8",
     "marked": "^16.4.1",
     "mysql2": "^3.15.3",
-    "oxlint": "^1.25.0",
     "varlog": "^1.0.5",
     "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.2",
+
+    "@eslint/css": "^0.14.0",
+    "@eslint/js": "^9.39.0",
+    "@types/node": "^24.9.2",
+    "esbuild": "^0.25.11",
+    "eslint": "^9.39.0",
+    "eslint-formatter-visualstudio": "^9.0.1",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import-x": "^4.16.1",
+    "globals": "^16.4.0",
+     "oxlint": "^1.25.0",
+    "kysely-codegen": "^0.19.0",
+    "oxlint-tsgolint": "0.4.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2"
   }
 }

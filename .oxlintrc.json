@@ -2,7 +2,7 @@
   "ignorePatterns": ["**/*.mjs","src/textile.ts"],
   "env": {
     "node": true,
-    "browser":false,
+    "browser":true,
     "webextensions":true
   },
   "categories": {
