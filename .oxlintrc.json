@@ -1,8 +1,8 @@
 {
-  "ignorePatterns": ["main/old","converter_old","main/unused_code","main/try","**/old/","**/*.mjs","/scripts","main/ext","main/bookmarks","src/textile.ts"],
+  "ignorePatterns": ["**/*.mjs","src/textile.ts"],
   "env": {
     "node": true,
-    "browser":true,
+    "browser":false,
     "webextensions":true
   },
   "categories": {

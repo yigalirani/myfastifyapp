@@ -1,5 +1,5 @@
 import * as esbuild from 'esbuild'
-import {run} from './runner.ts'
+import {run} from './runner'
 async function f(){
   await esbuild.build({ 
     entryPoints: ['src/index.ts'],
