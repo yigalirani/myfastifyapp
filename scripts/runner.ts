@@ -122,15 +122,9 @@ export async function run({f,title,watchfiles=[],filter}:{
         filename_changed=filename
     })
   }
-  function runit_one_changed(){
+  setInterval(()=>{
     if (last_changed > last_run) {
-       runit(`file changed ${filename_changed}`).then(result => {
-        console.log("Run succeeded:", result);
-      })
-      .catch((error:unknown) => {
-        console.error("Run failed:", error);
-      });
+       void runit(`file changed ${filename_changed}`)
     }
-  }
-  setInterval(runit_one_changed, 1000);
+  }, 1000);
 }
