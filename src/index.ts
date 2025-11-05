@@ -17,7 +17,7 @@ const config_schema = z.object({
     user: z.string(),
     password: z.string(),
     port: z.number(),
-    connectionLimit: z.number() 
+    connectionLimit: z.number()
   })
 });
 
@@ -89,10 +89,16 @@ async function build_server(app:FastifyInstance){
     const toc= toc_box_head(cache,post.ID)
     send_body({...post,body,...toc},reply)
   })
+
+
+app.get('/', (req, res) => {
+  res.send('Server is responding');
+});
+  
 }
 async function bootstap(){
   const app = Fastify({logger: true})
   await build_server(app)
-  await app.listen({ port: 3000 })
+  await app.listen({ port: 81 })
 }
 void bootstap()

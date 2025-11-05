@@ -2,9 +2,7 @@
 import { spawn } from 'node:child_process';
 import { watch } from 'node:fs';
 type FilterFunc=(line:string)=>string|true|false //string-show just the string  +line number, true show as is, false dont show
-/*
 
-*/
 export const eslint_linting_code:FilterFunc=(line:string)=>{
   if (line.split(' eslintrc:').length>1)
     return false
@@ -79,9 +77,7 @@ async function run_cmd({
     });
   });
 }
-async function sleep(ms:number) {
-  return await new Promise(resolve => setTimeout(resolve, ms));
-}
+
 export async function run({f,title,watchfiles=[],filter}:{
   f:string|(()=>Promise<void>)
   title?:string
@@ -100,6 +96,7 @@ export async function run({f,title,watchfiles=[],filter}:{
   let filename_changed=''
   async function runit(reason:string){
     last_run=Date.now()
+    console.clear()
     console.log(`starting ${effective_title||''} ${reason}`)
     const start=Date.now()
     try{
@@ -125,12 +122,15 @@ export async function run({f,title,watchfiles=[],filter}:{
         filename_changed=filename
     })
   }
-  while(true){
-    if (last_changed>last_run){
-      // oxlint-disable-next-line no-await-in-loop
-      await runit(`file changed ${filename_changed}`) 
+  function runit_one_changed(){
+    if (last_changed > last_run) {
+       runit(`file changed ${filename_changed}`).then(result => {
+        console.log("Run succeeded:", result);
+      })
+      .catch((error:unknown) => {
+        console.error("Run failed:", error);
+      });
     }
-    // oxlint-disable-next-line no-await-in-loop
-    await sleep(1000)
   }
+  setInterval(runit_one_changed, 1000);
 }

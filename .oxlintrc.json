@@ -2,7 +2,7 @@
   "ignorePatterns": ["**/*.mjs","src/textile.ts"],
   "env": {
     "node": true,
-    "browser":true,
+    "browser":false,
     "webextensions":true
   },
   "categories": {
@@ -42,8 +42,8 @@
     "eslint/max-lines":"off",
     "unicorn/catch-error-name":"off", //todo
     "eslint/no-undefined":"off",//not usefull for my for exanpple weakref.deref rereurn undefind if object was garbage collected
-    "eslint/no-ternary":"off",//dumb, ternatry is super useful
-    "eslint/no-throw-literal":"off", //i actualy rather yes throw liternal becuase its less code. question: do i need the stack? mabe yes, todo
+    "eslint/no-ternary":"off",//dumb ternatry is super useful
+    "eslint/no-throw-literal":"off", //i actualy rather yes throw liternal becuase its less code. question do i need the stack? mabe yes todo
     "eslint/no-void":"off",//void is super usefull foe example to mark class functions as not using the this
     "eslint/max-classes-per-file":"off",
     "eslint/no-lonely-if":"off", //i prefer lonly if of eselif
@@ -61,14 +61,14 @@
     "unicorn/prefer-set-has":"off", //todo
     "typescript/consistent-indexed-object-style":"off",//todo
     "unicorn/prefer-query-selector":"off", //i actualy prefer query by id for this project
-    "unicorn/prefer-number-properties":"off", //todo, maybe
+    "unicorn/prefer-number-properties":"off", //todo maybe
     "unicorn/new-for-builtins":"off",
     "typescript/no-dynamic-delete":"off",
     "unicorn/prefer-dom-node-append":"off",
     "unicorn/prefer-dom-node-remove":"off",
     "eslint/no-multi-assign":"off",
-    "unicorn/prefer-add-event-listener":"off",//todo, maybe
-    "eslint/max-depth":"off",//owseome rule, todo
+    "unicorn/prefer-add-event-listener":"off",//todo maybe
+    "eslint/max-depth":"off",//owseome rule todo
     "unicorn/prefer-global-this":"off", //maybe todo
     "typescript/ban-ts-comment":"off",
     "eslint/no-negated-condition":"off", //dumbest rule ever
@@ -89,10 +89,10 @@
     "eslint/class-methods-use-this":"off",
     "eslint/no-return-assign":"off",
     "eslint/no-param-reassign":"off",//nitrrogen is based on param reasigna
-    "unicorn/no-array-callback-reference":"off",//it does make sense, todo
+    "unicorn/no-array-callback-reference":"off",//it does make sense todo
     "eslint/no-warning-comments":"off",//just a silly warrning that disallow todo
     "unicorn/prefer-top-level-await":"off", //top level await causes other problems
     "unicorn/no-empty-file":"off", //i do have files that contain only commented out code. nothing wrong with that
-    "@typescript-eslint/strict-boolean-expressions": "off"
+    "@typescript-eslint/strict-boolean-expressions":"off" 
   }
 }

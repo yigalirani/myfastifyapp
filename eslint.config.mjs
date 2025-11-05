@@ -14,7 +14,6 @@ export default defineConfig(
   {
     languageOptions: {
       parserOptions: {
-        allowDefaultProject:true,
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
@@ -62,7 +61,7 @@ export default defineConfig(
       "@typescript-eslint/require-await":"off",//becuse oxc can do it
       "@typescript-eslint/promise-function-async":"off", //moved to oxc
       "no-constant-condition":"off",
-      "@typescript-eslint/unified-signatures":"off"//rule crashes in my case
+      "@typescript-eslint/unified-signatures":"off",//rule crashes in my case
     },
     languageOptions: {
       globals: {
