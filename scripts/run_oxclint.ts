@@ -1,6 +1,6 @@
-import {run} from './runner.ts'
+import {run} from '@yigal/watch_runner'
 await run({
-  f:'npx oxlint --type-aware',
+  cmd:'npx oxlint --type-aware',
   watchfiles:[
     'src',
     '.oxlintrc.json',

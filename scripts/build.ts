@@ -1,6 +1,6 @@
 import * as esbuild from 'esbuild'
-import {run} from './runner.ts'
-async function f(){
+import {run} from '@yigal/watch_runner'
+async function cmd(){
   await esbuild.build({ 
     entryPoints: ['src/index.ts'],
     platform: 'node',
@@ -12,4 +12,12 @@ async function f(){
   })
 } 
  
-await run({f,title:'build',watchfiles:['src','package.json','tsconfig.json']})
+await run({
+  cmd,
+  title:'build',
+  watchfiles:[
+    'src',
+    'package.json',
+    'tsconfig.json'
+  ]
+})
