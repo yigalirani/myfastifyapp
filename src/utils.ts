@@ -10,7 +10,7 @@ import { Kysely, MysqlDialect} from 'kysely'
 import type {FastifyReply, FastifyRequest,FastifyInstance} from 'fastify'
 import cookie from '@fastify/cookie';
 import { randomUUID } from 'node:crypto';
-
+import { z } from "zod";
 declare module 'fastify' {
   interface FastifyRequest {
     session_id?: string;
@@ -195,3 +195,17 @@ export function register_session_hook(app:FastifyInstance){
     return
   })
 }
+
+export const config_schema = z.object({
+  connectionString: z.string(),
+  connection:z.object({
+    database: z.string(),
+    host: z.string(),
+    user: z.string(),
+    password: z.string(),
+    port: z.number(),
+    connectionLimit: z.number(),
+  }),
+  salt:z.string(),
+  peper:z.string()
+})

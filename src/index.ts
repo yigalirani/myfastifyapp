@@ -4,22 +4,12 @@ import * as utils from './utils'
 import * as textile from './textile'
 
 import {print_body} from './render_page'
-import { z } from "zod";
+
 import { marked } from 'marked'
 import fastifyStatic from '@fastify/static';
 import type { Kysely} from 'kysely'
 //import { writeFile } from 'fs/promises';
-const config_schema = z.object({
-  connectionString: z.string(),
-  connection:z.object({
-    database: z.string(),
-    host: z.string(),
-    user: z.string(),
-    password: z.string(),
-    port: z.number(),
-    connectionLimit: z.number()
-  })
-});
+
 
 async function print_menu(db:Kysely<DB>) {
   const rows=await db.selectFrom('menu_view').selectAll().execute()
@@ -58,6 +48,7 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
     return {meta,...toc} 
 }
 async function build_server(app:FastifyInstance){
+  const {config_schema}=utils
   const {connection}= utils.read_zod('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
   const cache:Cache=await make_cache(db)

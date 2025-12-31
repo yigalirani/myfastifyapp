@@ -91,6 +91,11 @@
     "eslint/no-param-reassign":"off",//nitrrogen is based on param reasigna
     "unicorn/no-array-callback-reference":"off",//it does make sense todo
     "eslint/no-warning-comments":"off",//just a silly warrning that disallow todo
+    "eslint/capitalized-comments":"off",
+    "eslint/no-inline-comments":"off",
+    "eslint/default-case":"off",
+    "unicorn/switch-case-braces":"off",
+    "unicorn/require-post-message-target-origin":"off",
     "unicorn/prefer-top-level-await":"off", //top level await causes other problems
     "unicorn/no-empty-file":"off", //i do have files that contain only commented out code. nothing wrong with that
     "@typescript-eslint/strict-boolean-expressions":"off" 

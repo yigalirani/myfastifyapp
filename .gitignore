@@ -5,3 +5,4 @@ config.json
 autogen
 kysely_config.json
 compare
+*.pem

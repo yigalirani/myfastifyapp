@@ -8,27 +8,16 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "resend",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}\\dist\\index.js",
+      "program": "${workspaceFolder}\\dist\\resend.js",
       "outFiles": [
         "${workspaceFolder}/**/*.js"
       ]
-    },
+    }
 
-    {
-      "type": "kysely",
-      "request": "launch",
-      "name": "Launch Program",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}\\kysely.js",
-      "outFiles": [
-        "${workspaceFolder}/**/*.js"
-      ]
-    }    
+  
   ]
 }

@@ -15,5 +15,5 @@
     "allowImportingTsExtensions":true,
     "allowJs": true
   },
-  "include":["src/**/*","scripts/**/*","eslint.config.mjs" ]
+  "include":["src/**/*","eslint.config.mjs","build.ts" ]
 }
