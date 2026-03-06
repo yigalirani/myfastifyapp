@@ -9,8 +9,8 @@
     "kysely-codegen": "kysely-codegen --config-file kysely_config.json"
   },
   "scriptsmon": {
-    "autowatch": {
-      "$lint": [
+      "kysely-codegen":"kysely_config.json",
+      "lint": [
         "src",
         "biome.json",
         "tsconfig.json"
@@ -34,8 +34,9 @@
       ],
       "tsc": [
         "$lint"
-      ]
-    }
+      ],
+      "server":"./dist/index.js"
+    
   },
   "dependencies": {
     "@fastify/cookie": "11.0.2",
