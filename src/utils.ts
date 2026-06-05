@@ -53,67 +53,67 @@ function calc_first_non_folder<T>(item:TocItem<T>){
     return item
   return calc_first_non_folder(item)
 }
-
-
-export function generate_toc<T extends Record<string, PropertyKey|null>>({items,id_field,parent_id_field,start_id,render_item}:{
-  items: T[] //presorted by pos in patnet children order (in the db)
+export interface TOCConfig<T extends Record<string, PropertyKey|null> > {
   id_field: keyof T
   parent_id_field: keyof T
-  start_id: string | number
-  render_item:(a:T)=>{title:string,href:string}
-})/*: Toc<T>*/{
-  const enhanced_items=items.map(make_item)
-  const by_id=index_array(enhanced_items,id_field)
-  for (const item of enhanced_items){
+  start_id:string|number;
+  render_item:(a:T)=>{title:string,href:string}  
+}
+export class TOC<T extends Record<string, PropertyKey|null> > {
+  by_id
+  enhanced_items
+  parent_path
+  toc_section
+  next
+  last
+  constructor(
+    public config:TOCConfig<T>,
+    public items: T[]
+  ){
+    this.enhanced_items=items.map(make_item)
+    this.by_id=index_array(this.enhanced_items,this.config.id_field)   
+    this.add_children() 
+    const item=this.by_id[this.config.start_id]
+    this.parent_path=this.calc_parent_path(item)
+    const first_parent_path=this.parent_path[0]
+    if (item==null || first_parent_path==null)
+      return
+    this.toc_section=this.render_toc(first_parent_path,true)
+    this.next=this.calc_next(item,1,'Next')
+    this.last=this.calc_next(item,-1,'Last')
+  }
+  
+  calc_next(item:TocItem<T>|undefined,dpos:number,caption:string ):string|undefined{
     if (item==null)
-      continue
-    const item_parent_id=item.parent_id_field
-    if (item_parent_id==null)
-      continue
-    const parent_item=by_id[item_parent_id]
-    if (parent_item==null)
-      continue
-    parent_item.children.push(item)
-  }
-  const item=by_id[start_id]
-  let cur_item=item
-  const parent_path:TocItem<T>[]=[]
-  while(cur_item!=null){
-    parent_path.unshift(cur_item)
-    const parent_id=cur_item[parent_id_field]
-    if (parent_id==null)
-      break
-    cur_item=by_id[parent_id]
-  }
-  function calc_next(item:TocItem<T>,dpos:number,caption:string ){
-    const parent_id=item[parent_id_field]
+      return
+    const parent_id=item[this.config.parent_id_field]
     if (parent_id==null)
       return
-    const parent=by_id[parent_id]
+    const parent=this.by_id[parent_id]
     if (parent==null)
       return 
     const pos=parent.children.indexOf(item)
     const ans=parent.children[pos+dpos]
     if (ans!=null){
-      const {title,href}=render_item(ans)
+      const {title,href}=this.config.render_item(ans)
       return `<a href="${href}">${caption} - ${title}</a>`
     }
-    return calc_next(parent,dpos,caption)
-  }  
+    return this.calc_next(parent,dpos,caption)
+  } 
   
-  function render_toc(item:TocItem<T>,top:boolean):string{
+  render_toc(item:TocItem<T>,top:boolean):string{
     const folder=item.children.length>0
     if (top&&!folder)
       return ''
-    const {title,href}=render_item(item)
+    const {title,href}=this.config.render_item(item)
     const icon=folder?'folder':'page_text'
-    const expand=top||parent_path.includes(item)
-    const item_id_field=item[id_field]
-    const class_def=(item_id_field===start_id?'class=toc_box_selected':'')
-    const first_render=render_item(calc_first_non_folder(item))    
+    const expand=top||this.parent_path.includes(item)
+    const item_id_field=item[this.config.id_field]
+    const class_def=(item_id_field===this.config.start_id?'class=toc_box_selected':'')
+    const first_render=this.config.render_item(calc_first_non_folder(item))    
     if (!expand||!folder)
       return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
-    const children=item.children.map(x=>render_toc(x,false)).join('\n')
+    const children=item.children.map(x=>this.render_toc(x,false)).join('\n')
     const ul= `<ul>${children}</ul>`
 
     if (top)
@@ -125,11 +125,33 @@ export function generate_toc<T extends Record<string, PropertyKey|null>>({items,
       return ''
     const {title,href}=render_item(selected)
     return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
+  }  
+  add_children(){
+    for (const item of this.enhanced_items){
+      if (item==null)
+        continue
+      const item_parent_id=item.parent_id_field
+      if (item_parent_id==null)
+        continue
+      const parent_item=this.by_id[item_parent_id]
+      if (parent_item==null)
+        continue
+      parent_item.children.push(item)
+    }
   }
-  const toc_section=render_toc(parent_path[0],true)
-  const next=calc_next(item,1,'Next')
-  const last=calc_next(item,-1,'Last')
-  return {toc:by_id,parent_path,toc_section,next,last}
+  calc_parent_path(item:TocItem<T> | undefined){
+    //const item=this.by_id[this.config.start_id]
+    let cur_item=item
+    const ans:TocItem<T>[]=[]
+    while(cur_item!=null){
+      ans.unshift(cur_item)
+      const parent_id=cur_item[this.config.parent_id_field]
+      if (parent_id==null)
+        break
+      cur_item=this.by_id[parent_id]
+    }
+    return ans    
+  }
 }
 
 

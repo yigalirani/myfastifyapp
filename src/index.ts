@@ -31,18 +31,19 @@ async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when neede
 }
 type Cache=Awaited<ReturnType<typeof make_cache>>
 function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
-    const toc=utils.generate_toc({
-      items:cache.posts,  
-      id_field:'ID',
-      parent_id_field: 'post_parent',
-      start_id:post_id,
-      render_item({post_title,post_name}){
-        return{
-          title:post_title,
-          href:`/${post_name}.htm`
+    const toc=new utils.TOC({
+        id_field:'ID',
+        parent_id_field: 'post_parent',
+        start_id:post_id,
+        render_item({post_title,post_name}){
+          return{
+            title:post_title,
+            href:`/${post_name}.htm`
+          }
         }
-      }
-    })
+      },
+      cache.posts  
+    )
     const meta=function(){
       const meta_post_id=toc.parent_path[0]?.ID
       if (meta_post_id==null)
