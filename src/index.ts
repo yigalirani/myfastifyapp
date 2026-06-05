@@ -4,9 +4,9 @@ import * as utils from './utils'
 import * as textile from './textile'
 
 import {print_body} from './render_page'
-
+import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
-import fastifyStatic from '@fastify/static';
+import fastify_static from '@fastify/static';
 import type { Kysely} from 'kysely'
 //import { writeFile } from 'fs/promises';
 
@@ -21,12 +21,12 @@ async function print_menu(db:Kysely<DB>) {
 }
 async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when needed
   const posts=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
-  const posts_index=utils.index_array(posts,'post_name')
+  const posts_index=keyBy(posts,'post_name')
   return{
     posts,
     posts_index,
     menu:await print_menu(db),
-    meta:utils.index_array(await db.selectFrom('mc_meta').selectAll().execute(),'meta_post_id')
+    meta:keyBy(await db.selectFrom('mc_meta').selectAll().execute(),'meta_post_id')
   }
 }
 type Cache=Awaited<ReturnType<typeof make_cache>>
@@ -43,9 +43,9 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
         }
       },
       cache.posts  
-    )
+    ).ans
     const meta=function(){
-      const meta_post_id=toc.parent_path[0]?.ID
+      const meta_post_id=toc?.parent_path[0]?.data.ID
       if (meta_post_id==null)
         return
       return cache.meta[meta_post_id]
@@ -63,7 +63,7 @@ async function build_server(app:FastifyInstance){
   function send_body(a:Parameters<typeof print_body>[0],reply:FastifyReply){
     reply.type('text/html').send(print_body({...a,menu:cache.menu}))
   }  
-  app.register(fastifyStatic, {
+  app.register(fastify_static, {
     root: 'c:/yigal/mc2/images', // Root filesystem path
     prefix: '/', // URL prefix (optional)
     wildcard:false,

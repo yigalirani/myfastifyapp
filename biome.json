@@ -4,7 +4,8 @@
       "**/src/**",
       "!**/dist",
       "!types",
-      "!**/*.json"
+      "!**/*.json",
+      "!**/autogen/*.ts"
     ]
   },
   "assist": {
