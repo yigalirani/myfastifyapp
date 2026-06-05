@@ -1,5 +1,5 @@
 import Fastify,{type FastifyInstance, type FastifyReply} from 'fastify'
-import type {DB} from './autogen/database.js'
+import type {DB,McPost} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
 
@@ -7,7 +7,7 @@ import {print_body} from './render_page.js'
 import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
 import fastify_static from '@fastify/static';
-import type { Kysely} from 'kysely'
+import type { Kysely,Selectable} from 'kysely'
 //import { writeFile } from 'fs/promises';
 
 
@@ -20,7 +20,7 @@ async function print_menu(db:Kysely<DB>) {
   }).join('\n')
 }
 async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when needed
-  const posts=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
+  const posts:Selectable<McPost>[]=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
   const posts_index=keyBy(posts,'post_name')
   return{
     posts,
@@ -35,7 +35,8 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
         id_field:'ID',
         parent_id_field: 'post_parent',
         start_id:post_id,
-        render_item({post_title,post_name}){
+        render_item(data:Selectable<McPost>){
+          const {post_title,post_name}=data
           return{
             title:post_title,
             href:`/${post_name}.htm`

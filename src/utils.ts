@@ -24,12 +24,12 @@ declare module 'fastify' {
 
 interface TocItem<T>{ 
   data:T
+  id:T[keyof T]
+  parent_id:T[keyof T]|undefined
   children: TocItem<T>[] 
   next:TocItem<T>|undefined
 };
-function make_item<T>(data:T):TocItem<T>{
-  return {data,children:[],next:undefined}
-}
+
 
 export function tag(content:string|undefined,tag:string){ //is usefull?
   if (content==null)
@@ -41,16 +41,16 @@ function calc_first_non_folder<T>(item:TocItem<T>){
   const first_child=item.children[0]
   if (first_child==null)
     return item
-  return calc_first_non_folder(item)
+  return calc_first_non_folder(first_child)
 }
-type FlexRecord=Record<string, string|number|null>
-export interface TOCConfig<T extends FlexRecord > {
-  id_field: string
-  parent_id_field: string
+//type FlexRecord=Record<string, string|number>
+export interface TOCConfig<T > {
+  id_field: keyof T
+  parent_id_field: keyof T
   start_id:string|number;
-  render_item:(a:T)=>{title:string,href:string}  
+  render_item:(a:T)=>{title:string,href:string|undefined}  
 }
-export class TOC<T extends FlexRecord > {
+export class TOC<T> {
   by_id
   enhanced_items
   parent_path
@@ -59,8 +59,8 @@ export class TOC<T extends FlexRecord > {
     public config:TOCConfig<T>,
     public items: T[]
   ){
-    this.enhanced_items=items.map(make_item)
-    this.by_id=keyBy(this.enhanced_items,this.config.id_field)   
+    this.enhanced_items=items.map(this.make_item)
+    this.by_id=keyBy(this.enhanced_items,'id')
     this.add_children() 
     const item=this.by_id[this.config.start_id]
     this.parent_path=this.calc_parent_path(item)
@@ -77,7 +77,18 @@ export class TOC<T extends FlexRecord > {
       parent_path:this.parent_path
     }
   }
-  
+  make_item=(data:T)=>{
+    const id=data[this.config.id_field]
+    const parent_id=data[this.config.parent_id_field]
+    const ans:TocItem<T>={
+      id,
+      parent_id,
+      data,
+      children:[],
+      next:undefined
+    }
+    return ans
+  }
   calc_next(item:TocItem<T>|undefined,dpos:number,caption:string ):string|undefined{
     if (item==null)
       return
@@ -106,7 +117,8 @@ export class TOC<T extends FlexRecord > {
     const expand=top||this.parent_path.includes(item)
     const item_id_field=item.data[this.config.id_field]
     const class_def=(item_id_field===this.config.start_id?'class=toc_box_selected':'')
-    const first_render=this.config.render_item(calc_first_non_folder(item).data)    
+    const first=calc_first_non_folder(item).data
+    const first_render=this.config.render_item(first)    
     if (!expand||!folder)
       return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
     const children=item.children.map(x=>this.render_toc(x,false)).join('\n')
@@ -126,7 +138,7 @@ export class TOC<T extends FlexRecord > {
     for (const item of this.enhanced_items){
       /*if (item==null) //this is not needed because for of loop guarantee type non null
         continue*/
-      const item_parent_id=item.data.parent_id_field
+      const item_parent_id=item.data[this.config.parent_id_field]
       if (item_parent_id==null)
         continue
       const parent_item=this.by_id[item_parent_id]
