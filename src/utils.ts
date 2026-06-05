@@ -4,13 +4,12 @@
 
 import { readFileSync } from 'node:fs';
 //import { writeFile } from 'fs/promises';
-import type { ZodType } from "zod";
+import  { type ZodType,z } from "zod";
 import { createPool,type PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
 import type {FastifyReply, FastifyRequest,FastifyInstance} from 'fastify'
 import cookie from '@fastify/cookie';
 import { randomUUID } from 'node:crypto';
-import { z } from "zod";
 declare module 'fastify' {
   interface FastifyRequest {
     session_id?: string;
@@ -49,9 +48,10 @@ export function tag(content:string|undefined,tag:string){ //is usefull?
 
 }
 function calc_first_non_folder<T>(item:TocItem<T>){
-  if (item.children.length===0)
+  const first_child=item.children[0]
+  if (first_child==null)
     return item
-  return calc_first_non_folder(item.children[0])
+  return calc_first_non_folder(item)
 }
 
 

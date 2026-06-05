@@ -1,8 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import * as crypto from "node:crypto";
-import type {DB,McOrder} from './autogen/database'
+import type {DB} from './autogen/database'
 import * as utils from './utils'
-import { create } from 'xmlbuilder2';
 interface LicenseDetails{
   licensed_to   : string,
   expires       : string|null
@@ -39,7 +38,7 @@ export  function sign(text: string,key:Buffer<ArrayBuffer>){
   // Equivalent to bin2hex()
   return encrypted.toString("hex");
 }
-function splithex(input: string): string {
+/*function splithex(input: string): string {
     let ans = "";
     const len = input.length;
 
@@ -48,11 +47,11 @@ function splithex(input: string): string {
             ans += "\n        ";
         }
         const s = input.substring(i, i + 4);
-        ans += s + " ";
+        ans += s
     }
 
     return ans;
-}
+}*/
  function enc_license(a:LicenseDetails,template:string,key:Buffer<ArrayBuffer> ){
     const fields:(keyof LicenseDetails)[]=['licensed_to','expires','license_type','user_count','license_number','note','token']//can you get this from the type definition
     const normalized=fields.map(to_trimmed_string).join('')
@@ -86,7 +85,7 @@ interface license_detaild{
   return details
 }*/
 
-async function resend(order_num:number){
+export async function resend(order_num:number){
   const {config_schema}=utils
   const {connection,salt,peper}= utils.read_zod('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
@@ -107,4 +106,4 @@ async function resend(order_num:number){
   const lic=enc_license(details,template,key)
   console.log(lic)
 }
-void resend(3422)
+//void resend(3422)

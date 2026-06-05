@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "noUnusedLocals": true,
+    "composite": true,
+    /* Language and Environment */
+    "target": "ES2023",
+    /* Modules */ 
+    "esModuleInterop": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    /* JavaScript Support */
+    "allowJs": true,
+    /* Emit */
+    "rootDir": ".",
+    "declaration": true,
+    "outDir": "./types",
+    "sourceMap": true,
+    /* Interop Constraints */
+    "allowImportingTsExtensions": false,
+    /* Type Checking */
+    "noUncheckedIndexedAccess": true,
+    "strict": true,
+    "strictNullChecks": true,
+    /* Completeness */
+    "skipLibCheck": true,
+    "lib": ["ES2023"],
+    "types":[],
+    "emitDeclarationOnly":true,
+    "pretty": true,
+    "paths": {
+      "@generic/ts": ["./generic/ts/src/index.ts"],
+      "@generic/node": ["./generic/node/src/index.ts"],
+      "@generic/process": ["./generic/process/src/process.ts"],
+      "@generic/dom": ["./generic/dom/src/index.ts"],
+      "@common": ["./common/src/index.ts"],
+      "@monitor": ["./monitor/src/monitor.ts"]
+    }    
+  }
+}

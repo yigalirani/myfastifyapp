@@ -1,7 +1,7 @@
 {
   "scripts": {
     "biome": "biome lint",
-    "eslint": "eslint . --debug --color",
+    "eslint": "eslint . --color",
     "oxlint": "oxlint --type-aware",
     "build": "node build.ts",
     "server": "node ./dist/index.js",
@@ -11,7 +11,8 @@
   "scriptsmon": {
       "kysely-codegen":"kysely_config.json",
       "lint": [
-        "src",
+        "src/autogen/*.ts",
+        "src/*.ts",
         "biome.json",
         "tsconfig.json"
       ],
@@ -28,7 +29,7 @@
         ".oxlintrc.json"
       ],
       "build": [
-        "src",
+        "src/*.ts",
         "package.json",
         "build.ts"
       ],
@@ -40,31 +41,31 @@
   },
   "dependencies": {
     "@fastify/cookie": "11.0.2",
-    "@fastify/static": "9.0.0",
-    "fastify": "5.6.2",
-    "kysely": "0.28.9",
-    "marked": "17.0.1",
-    "mysql2": "3.16.0",
+    "@fastify/static": "9.1.3",
+    "fastify": "5.8.5",
+    "kysely": "0.29.2",
+    "marked": "18.0.5",
+    "mysql2": "3.22.4",
     "varlog": "1.0.5",
     "xmlbuilder2": "^4.0.3",
-    "zod": "4.2.1"
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.10",
-    "@eslint/css": "0.14.1",
-    "@eslint/js": "9.39.2",
-    "@types/node": "25.0.3",
-    "esbuild": "0.27.2",
-    "eslint": "9.39.2",
+    "@biomejs/biome": "2.4.16",
+    "@eslint/css": "1.3.0",
+    "@eslint/js": "10.0.1",
+    "@types/node": "25.9.1",
+    "esbuild": "0.28.0",
+    "eslint": "^9",
     "eslint-formatter-visualstudio": "9.0.1",
-    "eslint-import-resolver-typescript": "4.4.4",
-    "eslint-plugin-import-x": "4.16.1",
-    "globals": "16.5.0",
-    "kysely-codegen": "0.19.0",
-    "oxlint": "1.36.0",
-    "oxlint-tsgolint": "0.10.0",
-    "type-fest": "5.3.1",
-    "typescript": "5.9.3",
-    "typescript-eslint": "8.51.0"
+    "eslint-import-resolver-typescript": "4.4.5",
+    "eslint-plugin-import-x": "4.16.2",
+    "globals": "17.6.0",
+    "kysely-codegen": "0.20.0",
+    "oxlint": "1.68.0",
+    "oxlint-tsgolint": "0.23.0",
+    "type-fest": "5.7.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.60.1"
   }
 }

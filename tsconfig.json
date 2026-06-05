@@ -1,19 +1,9 @@
 {
-  "compilerOptions": {
-    "target": "es2022",
-    "lib": [
-       "ES2022","dom"
-    ],
-    "strict":true,
-    "declaration": true,
-    "emitDeclarationOnly": true,
-    "outDir": "types",
-    "rootDir":".",
-    "typeRoots": ["./node_modules/@types"],
-    "moduleResolution":"bundler",
-    "module": "preserve",
-    "allowImportingTsExtensions":true,
-    "allowJs": true
-  },
-  "include":["src/**/*","eslint.config.mjs","build.ts" ]
+  "extends": "./tsconfig.base.json",
+  
+  "include":[
+	"src/**/*",
+	"eslint.config.mjs",
+	"build.ts" 
+  ]
 }

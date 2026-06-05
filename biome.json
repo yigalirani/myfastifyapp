@@ -2,12 +2,9 @@
   "files": {
     "includes": [
       "**/src/**",
-      "!**/tmp2",
       "!**/dist",
-      "!converter_old",
       "!types",
-      "!**/*.json",
-      "!**/autogen/**"
+      "!**/*.json"
     ]
   },
   "assist": {
@@ -28,8 +25,9 @@
       "correctness":{
         "noUnusedFunctionParameters":"off",
         "noConstantCondition":"off",
-        "noUnusedImports":"off",
-        "noUnreachable":"off"
+        "noUnusedImports":"warn",
+        "noUnreachable":"off",
+        "noUnusedImports": "off"
       },
       "performance":"on",
       "performance": {
@@ -37,15 +35,14 @@
       },
       "nursery": "warn",
       "nursery":{
-      "useExplicitType":"off",
-        "useMaxParams":"off"
+        "useExplicitType":"off"
       },
       "suspicious": "on",
       "suspicious": {
         "noConsole":"off",
-        "noConfusingVoidType":"off",
-        "noExplicitAny":"off",
-        "noDebugger":"off"
+        "noConfusingVoidType":"warn",
+        "noExplicitAny":"warn",
+        "noDebugger":"warn"
       },
       "complexity": "on",
       "complexity": {

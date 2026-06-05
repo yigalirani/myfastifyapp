@@ -43,8 +43,14 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
         }
       }
     })
-    const meta_post_id=toc.parent_path[0].ID
-    const meta=cache.meta[meta_post_id]
+    const meta=function(){
+      const meta_post_id=toc.parent_path[0]?.ID
+      if (meta_post_id==null)
+        return
+      return cache.meta[meta_post_id]
+    }()
+    if (meta==null)
+      return toc
     return {meta,...toc} 
 }
 async function build_server(app:FastifyInstance){
@@ -71,10 +77,10 @@ async function build_server(app:FastifyInstance){
     const page=utils.calc_page(request,reply)   
     if (page==null) return 
     const post=cache.posts_index[page]
-    if (post===null)
+    if (post==null)
       return send_body({body:'page not found'},reply)
     //writeFile('debug/textile.txt',post.post_content)
-    const markdown=textile.textileToMarkdown(post.post_content)
+    const markdown=textile.textileToMarkdown(post.post_content||'')
     //writeFile('mark.md',markdown)
     const body=await marked(markdown)
     const toc= toc_box_head(cache,post.ID)
@@ -82,10 +88,10 @@ async function build_server(app:FastifyInstance){
   })
 
 
-app.get('/', (req, res) => {
+/*app.get('/', (req, res) => {
   res.send('Server is responding');
 });
-  
+ */ 
 }
 async function bootstap(){
   const app = Fastify({logger: true})
