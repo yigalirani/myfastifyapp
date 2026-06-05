@@ -1,5 +1,5 @@
 {
-  "ignorePatterns": ["**/dist/","**types","*.js","./tsconfig.json"],
+  "ignorePatterns": ["**/dist/","**types","*.js","./tsconfig.json","textile.ts","comments.ts"], 
   "env": {
     "node": true,
     "browser":true,

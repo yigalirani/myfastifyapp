@@ -14,7 +14,7 @@ export function textileToMarkdown(textile: string): string { // https://claude.a
   markdown = markdown.replace(/@([^@]+)@/g, '`$1`');
 
   // Strike-through - only convert ASCII hyphen-minus (U+002D) surrounded by whitespace or line boundaries
-  //markdown = markdown.replace(/(^|\s)\u002D([^\u002D]+)\u002D(\s|$)/g, '$1~~$2~~$3');
+//markdown = markdown.replace(/(^|\s)\u002D([^\u002D]+)\u002D(\s|$)/g, '$1~~$2~~$3');
 
   // Links - stop at punctuation that's typically not part of URLs (but allow periods and common URL chars)
 

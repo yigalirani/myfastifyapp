@@ -6,6 +6,10 @@ void esbuild.build({
     outdir: './dist', 
     sourcemap: true,
     target: 'node22',
-    minifySyntax:false
+    minifySyntax:false,
+    external:["node:events"],
+    format: 'esm',
+  banner: {
+        js: "import { createRequire } from 'node:module';const require = createRequire(import.meta.url);"
+    }    
 })
-

@@ -1,9 +1,9 @@
 import Fastify,{type FastifyInstance, type FastifyReply} from 'fastify'
-import type {DB} from './autogen/database'
-import * as utils from './utils'
-import * as textile from './textile'
+import type {DB} from './autogen/database.js'
+import * as utils from './utils.js'
+import * as textile from './textile.js'
 
-import {print_body} from './render_page'
+import {print_body} from './render_page.js'
 import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
 import fastify_static from '@fastify/static';
@@ -69,12 +69,12 @@ async function build_server(app:FastifyInstance){
     wildcard:false,
     extensions:['.css','.png']
   });
-  app.get('/login',function(req,reply){
+  app.get('/login',(req,reply)=>
     send_body({body:'todo: print login'},reply)
-  })
+  )
 
   app.get(
-    '/*', async function handler (request, reply) {
+    '/*', async  (request, reply)=> {
     const page=utils.calc_page(request,reply)   
     if (page==null) return 
     const post=cache.posts_index[page]
@@ -99,4 +99,4 @@ async function bootstap(){
   await build_server(app)
   await app.listen({ port: 81 })
 }
-void bootstap()
+await bootstap()

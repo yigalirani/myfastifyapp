@@ -22,7 +22,7 @@ declare module 'fastify' {
 }*/
 
 
-type TocItem<T>={ 
+interface TocItem<T>{ 
   data:T
   children: TocItem<T>[] 
   next:TocItem<T>|undefined
@@ -210,7 +210,6 @@ export function register_session_hook(app:FastifyInstance){
         signed: false,
       });
     }
-    return
   })
 }
 

@@ -41,7 +41,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
     return `<div class='${class_name}'>${a}</div>`
   }
   //       ${div(next, 'toc_box_next_link')}
-  const logo=((meta?.meta_logo) || '')
+  const logo=((meta?.meta_logo) ?? '')
   return `<!DOCTYPE html>
   <html>
 

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import * as crypto from "node:crypto";
-import type {DB} from './autogen/database'
-import * as utils from './utils'
+import type {DB} from './autogen/database.js'
+import * as utils from './utils.js'
 interface LicenseDetails{
   licensed_to   : string,
   expires       : string|null
