@@ -1,3 +1,5 @@
+import type{ Selectable } from "kysely"
+import type{ McUser } from "./autogen/database.js"
 
 /*print_login_menu();
 print_menu();
@@ -19,22 +21,29 @@ export interface BodyParams{
   meta?:Meta
   post_sidebar?:string
   post_title?:string
-  login_menu?:string
   menu?:string
   body:string
   toc_section?: string
   next?:string
   last?:string
   session_id?:string
+  user?:Selectable<McUser>|null
 }  
 
 export function print_body(p: BodyParams){
-  const { meta, post_sidebar, post_title, login_menu, menu, body, toc_section,/*next,*/last,session_id }=p
+  const { meta, post_sidebar, post_title, menu, body, toc_section,/*next,*/last,session_id,user }=p
   const meta_section=function(){
     if (meta==null)
       return ''
     return `<meta name='Description' content='${meta.meta_description}'>
     <meta name='keywords' content='${meta.meta_keywords}'>\n`
+  }()
+  const login_menu=function(){
+    if (user==null)
+        return "<a href='/login'>Login   </a>  ";
+    const {user_login,user_full_name}=user
+    const logged_as=user_full_name??user_login
+    return `Logged in as: ${logged_as} | <a href='/account'>my account</a> |  <a href='/logout>Logout</a>`;
   }()
   //    $g->body=str_replace("<!--error--!>",$g->error,$g->body);
 
