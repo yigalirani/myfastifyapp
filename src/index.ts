@@ -1,13 +1,14 @@
-import Fastify,{type FastifyInstance, type FastifyReply} from 'fastify'
+import Fastify,{FastifyRequest, type FastifyInstance, type FastifyReply} from 'fastify'
 import type {DB,McPost} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
-
+import { randomUUID } from 'node:crypto';
 import {print_body} from './render_page.js'
 import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
 import fastify_static from '@fastify/static';
 import type { Kysely,Selectable} from 'kysely'
+import signature from "cookie-signature";
 //import { writeFile } from 'fs/promises';
 
 
@@ -59,12 +60,54 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
       return toc
     return {meta,...toc} 
 }
+/*
+function  print_comment_form(){
+    print("<div class=comment_line></div>");
+  if ($g->user){
+      $g->id_counter++;
+      print "<div><a href='#' onclick='return toggle(\"r$g->id_counter\");'> Add Comment</a></div>";
+      print_comment_form2();
+  }
+  else
+      print "<a href='/$g->php_dir/user.php?action=login'>Login to post comments</a><br>";
+}
+function print_comments(){
+    print_comment_form();
+    $q=get_comment_query();
+    $comments=mc_query_all ($q,"comment_id");
+     add_children($comments,'comment_parent_id','comment_id');
+     foreach($comments as $comment){
+         if ($comment['comment_parent_id'])
+             break;
+         print_comment($comments,$comment,0);
+     }
+}*/
+interface Connection{
+  session_id:string
+}
+async function connect(request:FastifyRequest, reply:FastifyReply):Connection{
+  const secret='dfdf'
+  const session_id=function(){
+    const {session_id:exist}=request.cookies
+    if (exist!=null && signature.unsign(exist, secret)==exist)
+      return exist
+    const ans=signature.sign(crypto.randomUUID(), secret)
+    reply.setCookie('session_id', ans, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      signed: false,
+    });
+    return ans
+  }()
+  return {session_id}
+}
 async function build_server(app:FastifyInstance){
   const {config_schema}=utils
   const {connection}= utils.read_zod('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
   const cache:Cache=await make_cache(db)
-  await utils.register_session_hook(app)
+  //await utils.register_session_hook(app)
   function send_body(a:Parameters<typeof print_body>[0],reply:FastifyReply){
     reply.type('text/html').send(print_body({...a,menu:cache.menu}))
   }  

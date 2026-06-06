@@ -1,5 +1,5 @@
 {
-  "type":"module",
+  "type": "module",
   "scripts": {
     "biome": "biome lint",
     "eslint": "eslint . --color",
@@ -61,6 +61,8 @@
   "dependencies": {
     "@fastify/cookie": "11.0.2",
     "@fastify/static": "9.1.3",
+    "@types/cookie-signature": "^1.1.2",
+    "cookie-signature": "^1.2.2",
     "fastify": "5.8.5",
     "kysely": "0.29.2",
     "lodash-es": "^4.18.1",
