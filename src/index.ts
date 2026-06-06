@@ -1,5 +1,5 @@
-import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply,type onRequestHookHandler} from 'fastify'
-import type {DB,McPost} from './autogen/database.js'
+import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply,type onRequestAsyncHookHandler} from 'fastify'
+import type {DB,McPost,McUser} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
 
@@ -89,6 +89,7 @@ type CacheType=Awaited<ReturnType<typeof make_cache>>
 interface State{
   session_id:string
   cache:CacheType
+  user:Selectable<McUser>|undefined
 }
 declare module 'fastify' {
   interface FastifyRequest {
@@ -114,19 +115,19 @@ class MyServer{
     )    
     app.get('/*',this.send_page)
   }
-  make_state(request:FastifyRequest, reply:FastifyReply){
+  async make_state(request:FastifyRequest, reply:FastifyReply){
     const {secret}=this.config
 
     const cache=this.cache
     if (cache==null)
       throw new Error("server not ready yet, try again later")
     const session_id=utils.calc_session_id(request, reply,secret)
-    const ans:State= {session_id,cache}
+    const user = await this.db.selectFrom('mc_user').selectAll().where('user_session', '=', session_id).executeTakeFirst();
+    const ans:State= {session_id,cache,user}
     return ans
   }  
-  on_request:onRequestHookHandler=(request,reply,done)=>{
-    request.state=this.make_state(request,reply)
-    done()
+  on_request:onRequestAsyncHookHandler=async (request,reply)=>{
+    request.state=await this.make_state(request,reply)
   }
   async start(){
     this.cache=await make_cache(this.db)   
