@@ -45,7 +45,6 @@ export function print_body(p: BodyParams){
     const logged_as=user_full_name??user_login
     return `Logged in as: ${logged_as} | <a href='/account'>my account</a> |  <a href='/logout>Logout</a>`;
   }()
-  //    $g->body=str_replace("<!--error--!>",$g->error,$g->body);
 
   function div(a: string | undefined, class_name: string) {
     if (a == null || a === '')

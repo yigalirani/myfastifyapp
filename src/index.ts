@@ -97,8 +97,8 @@ declare module 'fastify' {
   }
 }
 function send_body(request:FastifyRequest,reply:FastifyReply,a:BodyParams){
-  const {menu}=request.state.cache
-  reply.type('text/html').send(print_body({...a,menu}))
+  const {cache:{menu},session_id}=request.state
+  reply.type('text/html').send(print_body({...a,session_id,menu}))
 }  
 function register_standard_plugins(app:FastifyInstance){
   app.register(fastify_static, {
