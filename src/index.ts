@@ -32,8 +32,12 @@ async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when neede
 type Cache=Awaited<ReturnType<typeof make_cache>>
 function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
     const toc=new utils.TOC({
-        id_field:'ID',
-        parent_id_field: 'post_parent',
+        get_fields(a:Selectable<McPost>){
+          return{
+            id:a.ID,
+            parent_id:a.post_parent
+          }
+        },
         start_id:post_id,
         render_item(data:Selectable<McPost>){
           const {post_title,post_name}=data

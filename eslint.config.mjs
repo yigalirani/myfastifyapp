@@ -5,7 +5,7 @@ import globals from 'globals';
 import { defineConfig, globalIgnores } from "eslint/config";
 console.log('import.meta.dirname',import.meta.dirname)
 export default defineConfig(
-  globalIgnores(["**/dist/", "**/types/",'**/node_modulests','**/*.js','**/ai.ts','**/textile.ts']),
+  globalIgnores(["**/dist/", "**/types/",'**/node_modulests','**/*.js','**/textile.ts']),
   eslint.configs.recommended, //taking all rules from eslint, truning select ones off below
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,

@@ -22,15 +22,23 @@ declare module 'fastify' {
 }*/
 
 
-interface TocItem<T>{ 
+
+type TOCField=string|number
+interface TOCFields{
+  id:TOCField
+  parent_id:TOCField|undefined
+}
+interface TocItem<T> extends TOCFields{ 
   data:T
-  id:T[keyof T]
-  parent_id:T[keyof T]|undefined
   children: TocItem<T>[] 
   next:TocItem<T>|undefined
 };
 
-
+export interface TOCConfig<T> {
+  get_fields: (a:T)=>TOCFields
+  start_id:TOCField;
+  render_item:(a:T)=>{title:string,href:string|undefined}  
+}
 export function tag(content:string|undefined,tag:string){ //is usefull?
   if (content==null)
     return ''
@@ -44,13 +52,10 @@ function calc_first_non_folder<T>(item:TocItem<T>){
   return calc_first_non_folder(first_child)
 }
 //type FlexRecord=Record<string, string|number>
-export interface TOCConfig<T > {
-  id_field: keyof T
-  parent_id_field: keyof T
-  start_id:string|number;
-  render_item:(a:T)=>{title:string,href:string|undefined}  
-}
-export class TOC<T> {
+//type Atom=string|number|boolean|null|undefined
+
+
+export class TOC<T>{
   by_id
   enhanced_items
   parent_path
@@ -78,21 +83,19 @@ export class TOC<T> {
     }
   }
   make_item=(data:T)=>{
-    const id=data[this.config.id_field]
-    const parent_id=data[this.config.parent_id_field]
+    const fields=this.config.get_fields(data)
     const ans:TocItem<T>={
-      id,
-      parent_id,
       data,
       children:[],
-      next:undefined
+      next:undefined, 
+      ...fields
     }
     return ans
   }
   calc_next(item:TocItem<T>|undefined,dpos:number,caption:string ):string|undefined{
     if (item==null)
       return
-    const parent_id=item.data[this.config.parent_id_field]
+    const {parent_id}=item
     if (parent_id==null)
       return
     //this.by_id type is  TOC<T extends Record<string, PropertyKey | null>>.by_id: Record<PropertyKey, TocItem<T>>
@@ -115,8 +118,8 @@ export class TOC<T> {
     const {title,href}=this.config.render_item(item.data)
     const icon=folder?'folder':'page_text'
     const expand=top||this.parent_path.includes(item)
-    const item_id_field=item.data[this.config.id_field]
-    const class_def=(item_id_field===this.config.start_id?'class=toc_box_selected':'')
+    const {id}=item
+    const class_def=(id===this.config.start_id?'class=toc_box_selected':'')
     const first=calc_first_non_folder(item).data
     const first_render=this.config.render_item(first)    
     if (!expand||!folder)
@@ -138,10 +141,10 @@ export class TOC<T> {
     for (const item of this.enhanced_items){
       /*if (item==null) //this is not needed because for of loop guarantee type non null
         continue*/
-      const item_parent_id=item.data[this.config.parent_id_field]
-      if (item_parent_id==null)
+      const {parent_id}=item
+      if (parent_id==null)
         continue
-      const parent_item=this.by_id[item_parent_id]
+      const parent_item=this.by_id[parent_id]
       if (parent_item==null)
         continue
       parent_item.children.push(item)
@@ -153,7 +156,7 @@ export class TOC<T> {
     const ans:TocItem<T>[]=[]
     while(cur_item!=null){
       ans.unshift(cur_item)
-      const parent_id=cur_item.data[this.config.parent_id_field]
+      const {parent_id}=cur_item
       if (parent_id==null)
         break
       cur_item=this.by_id[parent_id]
