@@ -11,6 +11,7 @@ import type {FastifyReply, FastifyRequest,FastifyInstance} from 'fastify'
 import cookie from '@fastify/cookie';
 import { randomUUID } from 'node:crypto';
 import {keyBy} from 'lodash-es';
+import signature from "cookie-signature";
 declare module 'fastify' {
   interface FastifyRequest {
     session_id?: string;
@@ -243,3 +244,20 @@ export const config_schema = z.object({
   salt:z.string(),
   peper:z.string()
 })
+export function calc_session_id(request:FastifyRequest,reply:FastifyReply,secret:string){
+  const {session_id:exist}=request.cookies
+  if (exist!=null){
+    const unsigned=signature.unsign(exist, secret)
+    if (unsigned!==false)
+      return unsigned
+  }
+  const ans=crypto.randomUUID()
+  const session_id=signature.sign(ans, secret)
+  reply.setCookie('session_id', session_id, {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    signed: false,
+  });
+  return ans
+}

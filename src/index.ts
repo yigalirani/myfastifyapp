@@ -8,7 +8,7 @@ import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
 import fastify_static from '@fastify/static';
 import type { Kysely,Selectable} from 'kysely'
-import signature from "cookie-signature";
+
 import cookie from '@fastify/cookie';
 //import { writeFile } from 'fs/promises';
 
@@ -107,24 +107,9 @@ class MyServer{
   }
   connect(request:FastifyRequest, reply:FastifyReply){
     const secret='dfdf'
-    const session_id=function(){
-      const {session_id:exist}=request.cookies
-      if (exist!=null){
-        const unsigned=signature.unsign(exist, secret)
-        if (unsigned!==false)
-          return unsigned
-      }
-      const ans=crypto.randomUUID()
-      const session_id=signature.sign(ans, secret)
-      reply.setCookie('session_id', session_id, {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        signed: false,
-      });
-      return ans
-    }()
+
     const cache=this.get_cache()
+    const session_id=utils.calc_session_id(request, reply,secret)
     const ans:Connection= {session_id,cache}
     return ans
   }  
