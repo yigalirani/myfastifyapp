@@ -3,7 +3,7 @@ import type {DB,McPost} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
 
-import {print_body} from './render_page.js'
+import {print_body,type BodyParams} from './render_page.js'
 import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
 import fastify_static from '@fastify/static';
@@ -109,40 +109,32 @@ class MyServer{
       parseOptions: {}, // cookie.parse options
     });    
     app.addHook('onRequest',this.on_request)
-    app.get('/login',(req,reply)=>
-      this.send_body({body:'todo: print login'},reply)
+    app.get('/login',(request,reply)=>
+      this.send_body(request,reply,{body:'todo: print login'})
     )    
     app.get('/*',this.send_page)
   }
   make_state(request:FastifyRequest, reply:FastifyReply){
     const {secret}=this.config
 
-    const cache=this.get_cache()
-
+    const cache=this.cache
+    if (cache==null)
+      throw new Error("server not ready yet, try again later")
     const session_id=utils.calc_session_id(request, reply,secret)
     const ans:State= {session_id,cache}
     return ans
   }  
   on_request:onRequestHookHandler=(request,reply,done)=>{
-    const {cookies}=request
-    if (cookies==null){
-      console.log('console in null')
-    }    
     request.state=this.make_state(request,reply)
     done()
   }
-  
   async start(){
     this.cache=await make_cache(this.db)   
+  }
 
-  }
-  get_cache(){
-    if (this.cache)
-      return this.cache
-    throw new Error("server not ready yet, try again later")
-  }
-  send_body(a:Parameters<typeof print_body>[0],reply:FastifyReply){
-    reply.type('text/html').send(print_body({...a,menu:this.get_cache().menu}))
+  send_body(request:FastifyRequest,reply:FastifyReply,a:BodyParams){
+    const {menu}=request.state.cache
+    reply.type('text/html').send(print_body({...a,menu}))
   }  
   register_static(){
     this.app.register(fastify_static, {
@@ -160,13 +152,13 @@ class MyServer{
     
     const post=cache.posts_index[page]
     if (post==null)
-      return this.send_body({body:'page not found'},reply)
+      return this.send_body(request,reply,{body:'page not found'})
     //writeFile('debug/textile.txt',post.post_content)
     const markdown=textile.textileToMarkdown(post.post_content||'')
     //writeFile('mark.md',markdown)
     const body=await marked(markdown)
     const toc= toc_box_head(cache,post.ID)
-    this.send_body({...post,body,...toc,session_id},reply)
+    this.send_body(request,reply,{...post,body,...toc,session_id})
   }
 }
 async function bootstap(){

@@ -15,8 +15,7 @@ function tag(a:string|undefined,tag_name:string){
     return ''
   return `<${tag_name}>${a}</${tag_name}>`
 }
-
-export function print_body({ meta, post_sidebar, post_title, login_menu, menu, body, toc_section,/*next,*/last,session_id }: {
+export interface BodyParams{
   meta?:Meta
   post_sidebar?:string
   post_title?:string
@@ -27,7 +26,10 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
   next?:string
   last?:string
   session_id?:string
-}){
+}  
+
+export function print_body(p: BodyParams){
+  const { meta, post_sidebar, post_title, login_menu, menu, body, toc_section,/*next,*/last,session_id }=p
   const meta_section=function(){
     if (meta==null)
       return ''
