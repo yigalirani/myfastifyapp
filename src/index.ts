@@ -100,6 +100,17 @@ function send_body(request:FastifyRequest,reply:FastifyReply,a:BodyParams){
   const {menu}=request.state.cache
   reply.type('text/html').send(print_body({...a,menu}))
 }  
+function register_standard_plugins(app:FastifyInstance){
+  app.register(fastify_static, {
+    root: 'c:/yigal/mc2/images', // Root filesystem path
+    prefix: '/', // URL prefix (optional)
+    wildcard:false,
+    extensions:['.css','.png']
+  });
+  app.register(cookie, {
+      parseOptions: {}, // cookie.parse options
+  });     
+}
 class MyServer{
   config_schema=utils.config_schema
   config
@@ -109,10 +120,8 @@ class MyServer{
   constructor(public app:FastifyInstance){
     this.config=utils.read_zod('./config.json',this.config_schema)
     this.db=utils.mysql_pool<DB>(this.config.connection) 
-    this.register_static() 
-      this.app.register(cookie, {
-      parseOptions: {}, // cookie.parse options
-    });    
+    register_standard_plugins(this.app) 
+  
     app.addHook('onRequest',this.on_request)
     app.get('/login',(request,reply)=>
       send_body(request,reply,{body:'todo: print login'})
@@ -135,16 +144,6 @@ class MyServer{
   }
   async start(){
     this.cache=await make_cache(this.db)   
-  }
-
- 
-  register_static(){
-    this.app.register(fastify_static, {
-      root: 'c:/yigal/mc2/images', // Root filesystem path
-      prefix: '/', // URL prefix (optional)
-      wildcard:false,
-      extensions:['.css','.png']
-    });
   }
 
   send_page:RouteHandlerMethod =async  (request, reply)=> {
