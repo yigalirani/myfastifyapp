@@ -1,4 +1,4 @@
-import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply} from 'fastify'
+import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply,type onRequestHookHandler} from 'fastify'
 import type {DB,McPost} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
@@ -86,9 +86,14 @@ function print_comments(){
 
 
 type CacheType=Awaited<ReturnType<typeof make_cache>>
-interface Connection{
+interface State{
   session_id:string
   cache:CacheType
+}
+declare module 'fastify' {
+  interface FastifyRequest {
+    state: State;
+  }
 }
 class MyServer{
   config_schema=utils.config_schema
@@ -100,24 +105,36 @@ class MyServer{
     this.config=utils.read_zod('./config.json',this.config_schema)
     this.db=utils.mysql_pool<DB>(this.config.connection) 
     this.register_static() 
+      this.app.register(cookie, {
+      parseOptions: {}, // cookie.parse options
+    });    
+    app.addHook('onRequest',this.on_request)
     app.get('/login',(req,reply)=>
       this.send_body({body:'todo: print login'},reply)
     )    
     app.get('/*',this.send_page)
   }
-  connect(request:FastifyRequest, reply:FastifyReply){
+  make_state(request:FastifyRequest, reply:FastifyReply){
     const {secret}=this.config
 
     const cache=this.get_cache()
+
     const session_id=utils.calc_session_id(request, reply,secret)
-    const ans:Connection= {session_id,cache}
+    const ans:State= {session_id,cache}
     return ans
   }  
+  on_request:onRequestHookHandler=(request,reply,done)=>{
+    const {cookies}=request
+    if (cookies==null){
+      console.log('console in null')
+    }    
+    request.state=this.make_state(request,reply)
+    done()
+  }
+  
   async start(){
     this.cache=await make_cache(this.db)   
-    await this.app.register(cookie, {
-        parseOptions: {}, // cookie.parse options
-      });   
+
   }
   get_cache(){
     if (this.cache)
@@ -137,7 +154,7 @@ class MyServer{
   }
 
   send_page:RouteHandlerMethod =async  (request, reply)=> {
-    const {cache,session_id}= this.connect(request, reply)
+    const {cache,session_id}= request.state
     const page=utils.calc_page(request,reply)   
     if (page==null) return 
     

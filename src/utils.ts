@@ -12,11 +12,7 @@ import cookie from '@fastify/cookie';
 import { randomUUID } from 'node:crypto';
 import {keyBy} from 'lodash-es';
 import signature from "cookie-signature";
-declare module 'fastify' {
-  interface FastifyRequest {
-    session_id?: string;
-  }
-}
+
 /*group of gerneric functions with understood input output that can be used in other programs with another databasre schems*/
 /*export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
   return a[field]
