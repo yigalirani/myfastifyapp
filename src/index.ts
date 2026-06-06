@@ -64,7 +64,7 @@ async function build_server(app:FastifyInstance){
   const {connection}= utils.read_zod('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
   const cache:Cache=await make_cache(db)
-  utils.register_session_hook(app)
+  await utils.register_session_hook(app)
   function send_body(a:Parameters<typeof print_body>[0],reply:FastifyReply){
     reply.type('text/html').send(print_body({...a,menu:cache.menu}))
   }  

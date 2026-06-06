@@ -210,11 +210,11 @@ export function calc_page(req:FastifyRequest,reply:FastifyReply){
     }
     return page
   }
-export function register_session_hook(app:FastifyInstance){
-  app.register(cookie, {
+export async function register_session_hook(app:FastifyInstance){
+  await app.register(cookie, {
     parseOptions: {}, // cookie.parse options
   });  
-  app.addHook('onRequest',  async (request, reply) => {
+  app.addHook('onRequest', (request, reply,done) => {
     let {session_id} = request.cookies;
     if (session_id==null) {
       session_id = randomUUID();
@@ -225,7 +225,9 @@ export function register_session_hook(app:FastifyInstance){
         signed: false,
       });
     }
+    done()
   })
+ 
 }
 
 export const config_schema = z.object({
