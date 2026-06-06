@@ -106,7 +106,7 @@ class MyServer{
     app.get('/*',this.send_page)
   }
   connect(request:FastifyRequest, reply:FastifyReply){
-    const secret='dfdf'
+    const {secret}=this.config
 
     const cache=this.get_cache()
     const session_id=utils.calc_session_id(request, reply,secret)

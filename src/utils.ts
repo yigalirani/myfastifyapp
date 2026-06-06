@@ -241,6 +241,7 @@ export const config_schema = z.object({
     port: z.number(),
     connectionLimit: z.number(),
   }),
+  secret: z.string(),
   salt:z.string(),
   peper:z.string()
 })
