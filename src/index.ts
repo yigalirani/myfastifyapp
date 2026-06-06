@@ -72,7 +72,7 @@ function  print_comment_form(){
   else
       print "<a href='/$g->php_dir/user.php?action=login'>Login to post comments</a><br>";
 }
-function print_comments(){
+function print_comments(ree){
     print_comment_form();
     $q=get_comment_query();
     $comments=mc_query_all ($q,"comment_id");
@@ -82,8 +82,8 @@ function print_comments(){
              break;
          print_comment($comments,$comment,0);
      }
-}*/
-
+}
+*/
 
 type CacheType=Awaited<ReturnType<typeof make_cache>>
 interface State{
@@ -96,6 +96,10 @@ declare module 'fastify' {
     state: State;
   }
 }
+function send_body(request:FastifyRequest,reply:FastifyReply,a:BodyParams){
+  const {menu}=request.state.cache
+  reply.type('text/html').send(print_body({...a,menu}))
+}  
 class MyServer{
   config_schema=utils.config_schema
   config
@@ -111,7 +115,7 @@ class MyServer{
     });    
     app.addHook('onRequest',this.on_request)
     app.get('/login',(request,reply)=>
-      this.send_body(request,reply,{body:'todo: print login'})
+      send_body(request,reply,{body:'todo: print login'})
     )    
     app.get('/*',this.send_page)
   }
@@ -133,10 +137,7 @@ class MyServer{
     this.cache=await make_cache(this.db)   
   }
 
-  send_body(request:FastifyRequest,reply:FastifyReply,a:BodyParams){
-    const {menu}=request.state.cache
-    reply.type('text/html').send(print_body({...a,menu}))
-  }  
+ 
   register_static(){
     this.app.register(fastify_static, {
       root: 'c:/yigal/mc2/images', // Root filesystem path
@@ -153,13 +154,13 @@ class MyServer{
     
     const post=cache.posts_index[page]
     if (post==null)
-      return this.send_body(request,reply,{body:'page not found'})
+      return send_body(request,reply,{body:'page not found'})
     //writeFile('debug/textile.txt',post.post_content)
     const markdown=textile.textileToMarkdown(post.post_content||'')
     //writeFile('mark.md',markdown)
     const body=await marked(markdown)
     const toc= toc_box_head(cache,post.ID)
-    this.send_body(request,reply,{...post,body,...toc,session_id})
+    send_body(request,reply,{...post,body,...toc,session_id})
   }
 }
 async function bootstap(){
