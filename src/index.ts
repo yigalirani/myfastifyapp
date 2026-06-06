@@ -109,10 +109,14 @@ class MyServer{
     const secret='dfdf'
     const session_id=function(){
       const {session_id:exist}=request.cookies
-      if (exist!=null && signature.unsign(exist, secret)===exist)
-        return exist
-      const ans=signature.sign(crypto.randomUUID(), secret)
-      reply.setCookie('session_id', ans, {
+      if (exist!=null){
+        const unsigned=signature.unsign(exist, secret)
+        if (unsigned!==false)
+          return unsigned
+      }
+      const ans=crypto.randomUUID()
+      const session_id=signature.sign(ans, secret)
+      reply.setCookie('session_id', session_id, {
         path: '/',
         httpOnly: true,
         sameSite: 'lax',
