@@ -16,7 +16,7 @@ function tag(a:string|undefined,tag_name:string){
   return `<${tag_name}>${a}</${tag_name}>`
 }
 
-export function print_body({ meta, post_sidebar, post_title, login_menu, menu, body, toc_section,/*next,*/last }: {
+export function print_body({ meta, post_sidebar, post_title, login_menu, menu, body, toc_section,/*next,*/last,session_id }: {
   meta?:Meta
   post_sidebar?:string
   post_title?:string
@@ -26,6 +26,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
   toc_section?: string
   next?:string
   last?:string
+  session_id?:string
 }){
   const meta_section=function(){
     if (meta==null)
@@ -74,6 +75,7 @@ export function print_body({ meta, post_sidebar, post_title, login_menu, menu, b
         </div>
           <div class=content>
           <div class=sidebar>
+              ${session_id??"session id not found"}
               ${div(toc_section, 'toc_box')}
               ${div(post_sidebar, 'post_sidebar')}
               </div>

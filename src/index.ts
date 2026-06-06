@@ -1,14 +1,15 @@
-import Fastify,{FastifyRequest, type FastifyInstance, type FastifyReply} from 'fastify'
+import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply} from 'fastify'
 import type {DB,McPost} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
-import { randomUUID } from 'node:crypto';
+
 import {print_body} from './render_page.js'
 import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
 import fastify_static from '@fastify/static';
 import type { Kysely,Selectable} from 'kysely'
 import signature from "cookie-signature";
+import cookie from '@fastify/cookie';
 //import { writeFile } from 'fs/promises';
 
 
@@ -82,69 +83,90 @@ function print_comments(){
          print_comment($comments,$comment,0);
      }
 }*/
+
+
+type CacheType=Awaited<ReturnType<typeof make_cache>>
 interface Connection{
   session_id:string
+  cache:CacheType
 }
-async function connect(request:FastifyRequest, reply:FastifyReply):Connection{
-  const secret='dfdf'
-  const session_id=function(){
-    const {session_id:exist}=request.cookies
-    if (exist!=null && signature.unsign(exist, secret)==exist)
-      return exist
-    const ans=signature.sign(crypto.randomUUID(), secret)
-    reply.setCookie('session_id', ans, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      signed: false,
-    });
-    return ans
-  }()
-  return {session_id}
-}
-async function build_server(app:FastifyInstance){
-  const {config_schema}=utils
-  const {connection}= utils.read_zod('./config.json',config_schema)
-  const db=utils.mysql_pool<DB>(connection)
-  const cache:Cache=await make_cache(db)
-  //await utils.register_session_hook(app)
-  function send_body(a:Parameters<typeof print_body>[0],reply:FastifyReply){
-    reply.type('text/html').send(print_body({...a,menu:cache.menu}))
-  }  
-  app.register(fastify_static, {
-    root: 'c:/yigal/mc2/images', // Root filesystem path
-    prefix: '/', // URL prefix (optional)
-    wildcard:false,
-    extensions:['.css','.png']
-  });
-  app.get('/login',(req,reply)=>
-    send_body({body:'todo: print login'},reply)
-  )
+class MyServer{
+  config_schema=utils.config_schema
+  config
+  db
+  cache:CacheType|undefined
 
-  app.get(
-    '/*', async  (request, reply)=> {
+  constructor(public app:FastifyInstance){
+    this.config=utils.read_zod('./config.json',this.config_schema)
+    this.db=utils.mysql_pool<DB>(this.config.connection) 
+    this.register_static() 
+    app.get('/login',(req,reply)=>
+      this.send_body({body:'todo: print login'},reply)
+    )    
+    app.get('/*',this.send_page)
+  }
+  connect(request:FastifyRequest, reply:FastifyReply){
+    const secret='dfdf'
+    const session_id=function(){
+      const {session_id:exist}=request.cookies
+      if (exist!=null && signature.unsign(exist, secret)===exist)
+        return exist
+      const ans=signature.sign(crypto.randomUUID(), secret)
+      reply.setCookie('session_id', ans, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        signed: false,
+      });
+      return ans
+    }()
+    const cache=this.get_cache()
+    const ans:Connection= {session_id,cache}
+    return ans
+  }  
+  async start(){
+    this.cache=await make_cache(this.db)   
+    await this.app.register(cookie, {
+        parseOptions: {}, // cookie.parse options
+      });   
+  }
+  get_cache(){
+    if (this.cache)
+      return this.cache
+    throw new Error("server not ready yet, try again later")
+  }
+  send_body(a:Parameters<typeof print_body>[0],reply:FastifyReply){
+    reply.type('text/html').send(print_body({...a,menu:this.get_cache().menu}))
+  }  
+  register_static(){
+    this.app.register(fastify_static, {
+      root: 'c:/yigal/mc2/images', // Root filesystem path
+      prefix: '/', // URL prefix (optional)
+      wildcard:false,
+      extensions:['.css','.png']
+    });
+  }
+
+  send_page:RouteHandlerMethod =async  (request, reply)=> {
+    const {cache,session_id}= this.connect(request, reply)
     const page=utils.calc_page(request,reply)   
     if (page==null) return 
+    
     const post=cache.posts_index[page]
     if (post==null)
-      return send_body({body:'page not found'},reply)
+      return this.send_body({body:'page not found'},reply)
     //writeFile('debug/textile.txt',post.post_content)
     const markdown=textile.textileToMarkdown(post.post_content||'')
     //writeFile('mark.md',markdown)
     const body=await marked(markdown)
     const toc= toc_box_head(cache,post.ID)
-    send_body({...post,body,...toc},reply)
-  })
-
-
-/*app.get('/', (req, res) => {
-  res.send('Server is responding');
-});
- */ 
+    this.send_body({...post,body,...toc,session_id},reply)
+  }
 }
 async function bootstap(){
   const app = Fastify({logger: true})
-  await build_server(app)
+  const server= new MyServer(app)
+  await server.start()
   await app.listen({ port: 81 })
 }
 await bootstap()
