@@ -1,10 +1,10 @@
 // oxlint-disable no-unsafe-call
 // oxlint-disable no-unsafe-assignment
 // oxlint-disable no-unsafe-member-access
-
+import { TypeCompiler } from "@sinclair/typebox/compiler";
+import type { TSchema, Static } from "@sinclair/typebox";
 import { readFileSync } from 'node:fs';
 //import { writeFile } from 'fs/promises';
-import  { type ZodType,z } from "zod";
 import { createPool,type PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
 import type {FastifyReply, FastifyRequest} from 'fastify'
@@ -161,10 +161,18 @@ export class TOC<T>{
   }
 }
 
-
+/*
 export function read_zod<T>(filename: string, schema: ZodType<T>): T {
   const config_data = readFileSync(filename, 'utf8');  //read sync so doent need the buildfasity pattern
   return schema.parse(JSON.parse(config_data));
+}*/
+
+export function read_typebox<T extends TSchema>(filename: string, schema: T): Static<T> {
+  const config_data = readFileSync(filename, "utf8");
+  const compiler = TypeCompiler.Compile(schema);
+  const parsed_json = JSON.parse(config_data);
+  const ans = compiler.Decode(parsed_json);
+  return ans;
 }
 export function mysql_pool<T>(connection:PoolOptions){
   const dialect = new MysqlDialect({
@@ -208,20 +216,7 @@ export function calc_page(req:FastifyRequest,reply:FastifyReply){
   }
 
 
-export const config_schema = z.object({
-  connectionString: z.string(),
-  connection:z.object({
-    database: z.string(),
-    host: z.string(),
-    user: z.string(),
-    password: z.string(),
-    port: z.number(),
-    connectionLimit: z.number(),
-  }),
-  secret: z.string(),
-  salt:z.string(),
-  peper:z.string()
-})
+
 export function calc_session_id(request:FastifyRequest,reply:FastifyReply,secret:string){
   const {session_id:exist}=request.cookies
   if (exist!=null){

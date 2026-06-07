@@ -2,6 +2,8 @@ import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstan
 import type {DB,McPost,McUser} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
+import * as common from './common.js'
+
 import { resolve } from 'upath';
 import {print_body,type BodyParams,render_login_form} from './render_page.js'
 import {keyBy} from 'lodash-es';
@@ -129,13 +131,13 @@ function register_standard_plugins(app:FastifyInstance){
 
 
 class MyServer{
-  config_schema=utils.config_schema
+  config_schema=common.config_schema
   config
   db
   cache:CacheType|undefined
 
   constructor(public app:FastifyInstance){
-    this.config=utils.read_zod('./config.json',this.config_schema)
+    this.config=utils.read_typebox('./config.json',this.config_schema)
     this.db=utils.mysql_pool<DB>(this.config.connection) 
     register_standard_plugins(this.app) 
   

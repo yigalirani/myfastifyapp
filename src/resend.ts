@@ -2,6 +2,8 @@ import { readFile } from 'node:fs/promises';
 import * as crypto from "node:crypto";
 import type {DB} from './autogen/database.js'
 import * as utils from './utils.js'
+import * as common from './common.js'
+
 interface LicenseDetails{
   licensed_to   : string,
   expires       : string|null
@@ -86,8 +88,8 @@ interface license_detaild{
 }*/
 
 export async function resend(order_num:number){
-  const {config_schema}=utils
-  const {connection,salt,peper}= utils.read_zod('./config.json',config_schema)
+  const {config_schema}=common
+  const {connection,salt,peper}= utils.read_typebox('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
   const order=await db.selectFrom('mc_order').where('order_id','=',order_num).selectAll().executeTakeFirstOrThrow()
   const {lic_id}=await db.insertInto('mc_lic').defaultValues().returning('lic_id').executeTakeFirstOrThrow();

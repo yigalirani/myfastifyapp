@@ -63,7 +63,7 @@ export function print_body(p: BodyParams){
   <meta http-equiv=Pragma CONTENT=no-cache>
 
   <link rel="stylesheet" href="/client/style2.css" type="text/css" media="screen" >
-  <script type="text/javascript" src="/client/script.js"></script>
+    <script type="text/javascript" src="/client/script.js"></script>
   ${meta_section}
 
   <title>${post_title}</title>
@@ -148,7 +148,7 @@ export function render_login_form(data?:Login,errors?:Login){
 ${gen_input({name:'email',data,errors,type:'email'})}
 ${gen_input({name:'password',data,errors,type:'password'})}    
 ${submit('ok')}
-  <div class=form_comment>Dont have a symbol click acount? <a href=/register>Register</a> </div> 
+  <div class=form_comment>Dont have a symbol click account? <a href=/register>Register</a> </div> 
   <div class=form_comment>Forgot or dont have a password? <a href=/reset_password>Reset password</a></div>
 </div>
 </form>
