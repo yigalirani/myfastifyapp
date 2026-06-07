@@ -104,3 +104,48 @@ export function print_body(p: BodyParams){
 
 `
 }
+
+interface Login{
+  email:string
+  password:string
+  [key: string]: string
+}
+interface GenInput{
+  title?:string,
+  type?:string,
+  name:string,
+  data:Record<string,string>
+  errors:Record<string,string>
+  extra?:string
+}
+function gen_input(a:GenInput){
+  const {title,name,data,errors,extra,type}=a
+  const value=data[name]
+  const error=errors[name]
+  const value_attr=value==null?'':`value=${value}`
+  const error_span=error==null?'':`<span id="${name}_error" class="error_msg" aria-live="assertive">${error}</span>`;
+  return  `<label for="${name}">${title??name}:</label>
+      <input 
+        id="id_${name}"
+        name="name"
+        class="form_input"
+        type="${type??'text'}" 
+        required 
+        ${extra}
+        ${value_attr}
+        aria-invalid="true"
+        aria-describedby="user_email_error"
+        value="${data.email}"
+      >
+       ${error_span}`
+}
+export function render_login_form(data:Login,errors:Login){
+  return `<div class=login>
+<form action="/login" method="POST">
+${gen_input({name:'email',data,errors,type:'email'})}
+${gen_input({name:'password',data,errors,type:'password'})}    
+</form>
+<br>Dont have a symbol click acount? <a href=/register>Register</a> <br>Forgot or dont have a password? <a href=/reset_password>Reset password</a><br>
+</div>`
+};
+

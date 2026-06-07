@@ -115,6 +115,9 @@ function register_standard_plugins(app:FastifyInstance){
       parseOptions: {}, // cookie.parse options
   });     
 }
+
+
+
 class MyServer{
   config_schema=utils.config_schema
   config
