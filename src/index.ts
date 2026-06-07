@@ -92,12 +92,12 @@ interface State{
   user:Selectable<McUser>|undefined
 }
 declare module 'fastify' {
-  interface FastifyRequest {
+  interface FastifyReply {
     state: State;
   }
 }
-function send_body(request:FastifyRequest,reply:FastifyReply,a:BodyParams){
-  const {cache:{menu},session_id}=request.state
+function send_body(reply:FastifyReply,a:BodyParams){
+  const {cache:{menu},session_id}=reply.state
   reply.type('text/html').send(print_body({...a,session_id,menu}))
 }  
 function register_standard_plugins(app:FastifyInstance){
@@ -141,7 +141,7 @@ class MyServer{
   
     app.addHook('onRequest',this.on_request)
     app.get('/login',(request,reply)=>
-      send_body(request,reply,{body:render_login_form()})
+      send_body(reply,{body:render_login_form()})
     )    
     app.get('/*',this.send_page)
   }
@@ -157,26 +157,26 @@ class MyServer{
     return ans
   }  
   on_request:onRequestAsyncHookHandler=async (request,reply)=>{
-    request.state=await this.make_state(request,reply)
+    reply.state=await this.make_state(request,reply)
   }
   async start(){
     this.cache=await make_cache(this.db)   
   }
 
   send_page:RouteHandlerMethod =async  (request, reply)=> {
-    const {cache,session_id}= request.state
+    const {cache,session_id}= reply.state
     const page=utils.calc_page(request,reply)   
     if (page==null) return 
     
     const post=cache.posts_index[page]
     if (post==null)
-      return send_body(request,reply,{body:'page not found'})
+      return send_body(reply,{body:'page not found'})
     //writeFile('debug/textile.txt',post.post_content)
     const markdown=textile.textileToMarkdown(post.post_content||'')
     //writeFile('mark.md',markdown)
     const body=await marked(markdown)
     const toc= toc_box_head(cache,post.ID)
-    send_body(request,reply,{...post,body,...toc,session_id})
+    send_body(reply,{...post,body,...toc,session_id})
   }
 }
 async function bootstap(){
