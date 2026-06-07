@@ -170,7 +170,7 @@ export function read_zod<T>(filename: string, schema: ZodType<T>): T {
 export function read_typebox<T extends TSchema>(filename: string, schema: T): Static<T> {
   const config_data = readFileSync(filename, "utf8");
   const compiler = TypeCompiler.Compile(schema);
-  const parsed_json = JSON.parse(config_data);
+  const parsed_json = JSON.parse(config_data)as unknown;
   const ans = compiler.Decode(parsed_json);
   return ans;
 }
@@ -234,3 +234,70 @@ export function calc_session_id(request:FastifyRequest,reply:FastifyReply,secret
   });
   return ans
 }
+interface FieldDef {
+  name: string;
+  type: string;
+  title?: string;
+}
+export function convert_schema(schema: TSchema): FieldDef[] {
+  const { properties } = schema;
+  const ans: FieldDef[] = Object.entries(properties).map(([key, value]) => {
+    const property_schema = value as TSchema;
+    const { format, type: schema_type, title } = property_schema;
+    const type = (format as string) || (schema_type as string);
+
+    const field: FieldDef = { name: key, type };
+
+    if (typeof title === 'string') {
+      field.title = title;
+    }
+
+    return field;
+  });
+
+  return ans;
+}
+
+interface GenInput{
+  title?:string,
+  type?:string,
+  name:string,
+  data?:Record<string,string>
+  errors?:Record<string,string>
+  extra?:string
+}
+function gen_input(a:GenInput){
+  const {title,name,data,errors,extra,type}=a
+  const value=data?.[name]
+  const error=errors?.[name]
+  const value_attr=value==null?'':`value=${value}`
+  const error_span=error==null?'':`<span id="id_${name}_error" class="error_msg" aria-live="assertive">${error}</span>`;
+  return  `<div class=form_entry><label for="id_${name}">${title??name}:</label>
+      <input 
+        id="id_${name}"
+        name="${name}"
+        class="form_input"
+        type="${type??'text'}" 
+        required 
+        ${extra}
+        ${value_attr}
+        aria-invalid="true"
+        aria-describedby="id_${name}_error"
+      >
+       ${error_span}
+       </div>
+       `
+}
+export function make_html_form<T extends TSchema>(schema:T,html:string){
+  const field_defs=convert_schema(schema)
+  return function(data?:T,errors?:T){
+    const fragments=[]
+    for (const {name,title,type} of field_defs)
+      fragments.push(gen_input({name,data,errors,type,title}))
+    const joined=fragments.join('\n')
+    const ans=html.replace('###',joined)
+    return ans
+  }
+}
+
+

@@ -13,3 +13,13 @@ export const config_schema = Type.Object({
   salt:Type.String(),
   peper:Type.String()
 })
+
+export const login_schema = Type.Object({
+  email:Type.String({ format: 'email' }),
+  password:Type.String()
+})
+/*
+"fields":[
+  {"name":'email',"type":'email'},
+  {"name":'password',"type":'password'}
+]*/

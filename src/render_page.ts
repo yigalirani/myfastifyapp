@@ -1,5 +1,7 @@
 import type{ Selectable } from "kysely"
 import type{ McUser } from "./autogen/database.js"
+import { login_schema} from "./common.js"
+import {make_html_form} from "./utils.js"
 
 /*print_login_menu();
 print_menu();
@@ -106,20 +108,20 @@ function submit(title:string){
   return `<div class=form_entry><button type="submit">${title}</button></div>`
 }
 
-interface Login{
+/*interface Login{
   email:string
   password:string
   [key: string]: string
-}
-interface GenInput{
+}*/
+/*interface GenInput{
   title?:string,
   type?:string,
   name:string,
   data?:Record<string,string>
   errors?:Record<string,string>
   extra?:string
-}
-function gen_input(a:GenInput){
+}*/
+/*function gen_input(a:GenInput){
   const {title,name,data,errors,extra,type}=a
   const value=data?.[name]
   const error=errors?.[name]
@@ -140,19 +142,16 @@ function gen_input(a:GenInput){
        ${error_span}
        </div>
        `
-}
-export function render_login_form(data?:Login,errors?:Login){
-  return `
-<form action="/login" method="POST">
+}*/
+export const render_login_form=make_html_form(login_schema,
+`<form action="/login" method="POST">
 <div class=login>
-${gen_input({name:'email',data,errors,type:'email'})}
-${gen_input({name:'password',data,errors,type:'password'})}    
+###
 ${submit('ok')}
   <div class=form_comment>Dont have a symbol click account? <a href=/register>Register</a> </div> 
   <div class=form_comment>Forgot or dont have a password? <a href=/reset_password>Reset password</a></div>
 </div>
 </form>
 `
-
-};
+)
 
