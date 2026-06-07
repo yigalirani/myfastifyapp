@@ -3,7 +3,7 @@ import type {DB,McPost,McUser} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
 
-import {print_body,type BodyParams} from './render_page.js'
+import {print_body,type BodyParams,render_login_form} from './render_page.js'
 import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
 import fastify_static from '@fastify/static';
@@ -131,7 +131,7 @@ class MyServer{
   
     app.addHook('onRequest',this.on_request)
     app.get('/login',(request,reply)=>
-      send_body(request,reply,{body:'todo: print login'})
+      send_body(request,reply,{body:render_login_form()})
     )    
     app.get('/*',this.send_page)
   }

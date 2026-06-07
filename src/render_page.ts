@@ -114,14 +114,14 @@ interface GenInput{
   title?:string,
   type?:string,
   name:string,
-  data:Record<string,string>
-  errors:Record<string,string>
+  data?:Record<string,string>
+  errors?:Record<string,string>
   extra?:string
 }
 function gen_input(a:GenInput){
   const {title,name,data,errors,extra,type}=a
-  const value=data[name]
-  const error=errors[name]
+  const value=data?.[name]
+  const error=errors?.[name]
   const value_attr=value==null?'':`value=${value}`
   const error_span=error==null?'':`<span id="${name}_error" class="error_msg" aria-live="assertive">${error}</span>`;
   return  `<label for="${name}">${title??name}:</label>
@@ -135,11 +135,10 @@ function gen_input(a:GenInput){
         ${value_attr}
         aria-invalid="true"
         aria-describedby="user_email_error"
-        value="${data.email}"
       >
        ${error_span}`
 }
-export function render_login_form(data:Login,errors:Login){
+export function render_login_form(data?:Login,errors?:Login){
   return `<div class=login>
 <form action="/login" method="POST">
 ${gen_input({name:'email',data,errors,type:'email'})}
