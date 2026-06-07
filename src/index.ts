@@ -2,7 +2,7 @@ import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstan
 import type {DB,McPost,McUser} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
-
+import { resolve } from 'upath';
 import {print_body,type BodyParams,render_login_form} from './render_page.js'
 import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
@@ -105,10 +105,20 @@ function register_standard_plugins(app:FastifyInstance){
     root: 'c:/yigal/mc2/images', // Root filesystem path
     prefix: '/', // URL prefix (optional)
     wildcard: false,
-    extensions: ['.css', '.png','.js'],
+    extensions: ['.png'],
     maxAge: 31_536_000_000,
     immutable: true
-});
+  });
+  const root=resolve('client')
+  app.register(fastify_static, {
+    root, // Root filesystem path
+    prefix: '/client', // URL prefix (optional)
+    wildcard: false,
+    extensions: ['.js','.css'],
+    maxAge: 31_536_000_000,
+    immutable: true,
+    decorateReply: false
+  });  
 
   
   app.register(cookie, {

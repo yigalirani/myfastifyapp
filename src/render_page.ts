@@ -62,9 +62,8 @@ export function print_body(p: BodyParams){
   <meta http-equiv=Cache-Control CONTENT=no-cache>
   <meta http-equiv=Pragma CONTENT=no-cache>
 
-  <link rel="stylesheet" href="/style2.css" type="text/css" media="screen" >
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-  <script type="text/javascript" src="/script.js"></script>
+  <link rel="stylesheet" href="/client/style2.css" type="text/css" media="screen" >
+  <script type="text/javascript" src="/client/script.js"></script>
   ${meta_section}
 
   <title>${post_title}</title>
@@ -101,8 +100,10 @@ export function print_body(p: BodyParams){
       
     </body>
   </html>
-
 `
+}
+function submit(title:string){
+  return `<div class=form_entry><button type="submit">${title}</button></div>`
 }
 
 interface Login{
@@ -123,28 +124,35 @@ function gen_input(a:GenInput){
   const value=data?.[name]
   const error=errors?.[name]
   const value_attr=value==null?'':`value=${value}`
-  const error_span=error==null?'':`<span id="${name}_error" class="error_msg" aria-live="assertive">${error}</span>`;
-  return  `<label for="${name}">${title??name}:</label>
+  const error_span=error==null?'':`<span id="id_${name}_error" class="error_msg" aria-live="assertive">${error}</span>`;
+  return  `<div class=form_entry><label for="id_${name}">${title??name}:</label>
       <input 
         id="id_${name}"
-        name="name"
+        name="${name}"
         class="form_input"
         type="${type??'text'}" 
         required 
         ${extra}
         ${value_attr}
         aria-invalid="true"
-        aria-describedby="user_email_error"
+        aria-describedby="id_${name}_error"
       >
-       ${error_span}`
+       ${error_span}
+       </div>
+       `
 }
 export function render_login_form(data?:Login,errors?:Login){
-  return `<div class=login>
+  return `
 <form action="/login" method="POST">
+<div class=login>
 ${gen_input({name:'email',data,errors,type:'email'})}
 ${gen_input({name:'password',data,errors,type:'password'})}    
+${submit('ok')}
+  <div class=form_comment>Dont have a symbol click acount? <a href=/register>Register</a> </div> 
+  <div class=form_comment>Forgot or dont have a password? <a href=/reset_password>Reset password</a></div>
+</div>
 </form>
-<br>Dont have a symbol click acount? <a href=/register>Register</a> <br>Forgot or dont have a password? <a href=/reset_password>Reset password</a><br>
-</div>`
+`
+
 };
 
