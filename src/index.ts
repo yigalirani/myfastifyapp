@@ -105,7 +105,7 @@ function register_standard_plugins(app:FastifyInstance){
     root: 'c:/yigal/mc2/images', // Root filesystem path
     prefix: '/', // URL prefix (optional)
     wildcard: false,
-    extensions: ['.css', '.png'],
+    extensions: ['.css', '.png','.js'],
     maxAge: 31_536_000_000,
     immutable: true
 });

@@ -7,9 +7,8 @@ import { readFileSync } from 'node:fs';
 import  { type ZodType,z } from "zod";
 import { createPool,type PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
-import type {FastifyReply, FastifyRequest,FastifyInstance} from 'fastify'
-import cookie from '@fastify/cookie';
-import { randomUUID } from 'node:crypto';
+import type {FastifyReply, FastifyRequest} from 'fastify'
+
 import {keyBy} from 'lodash-es';
 import signature from "cookie-signature";
 
@@ -207,25 +206,7 @@ export function calc_page(req:FastifyRequest,reply:FastifyReply){
     }
     return page
   }
-export async function register_session_hook(app:FastifyInstance){
-  await app.register(cookie, {
-    parseOptions: {}, // cookie.parse options
-  });  
-  app.addHook('onRequest', (request, reply,done) => {
-    let {session_id} = request.cookies;
-    if (session_id==null) {
-      session_id = randomUUID();
-      reply.setCookie('session_id', session_id, {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        signed: false,
-      });
-    }
-    done()
-  })
- 
-}
+
 
 export const config_schema = z.object({
   connectionString: z.string(),
