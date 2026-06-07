@@ -3,14 +3,14 @@ import type {DB,McPost,McUser} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
 import * as common from './common.js'
-
+import form_body from "@fastify/formbody";
 import { resolve } from 'upath';
 import {print_body,type BodyParams,render_login_form} from './render_page.js'
 import {keyBy} from 'lodash-es';
 import { marked } from 'marked'
 import fastify_static from '@fastify/static';
 import type { Kysely,Selectable} from 'kysely'
-
+import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import cookie from '@fastify/cookie';
 //import { writeFile } from 'fs/promises';
 
@@ -126,6 +126,7 @@ function register_standard_plugins(app:FastifyInstance){
   app.register(cookie, {
       parseOptions: {}, // cookie.parse options
   });     
+  app.register(form_body);
 }
 
 
@@ -135,17 +136,22 @@ class MyServer{
   config
   db
   cache:CacheType|undefined
-
-  constructor(public app:FastifyInstance){
+  app
+  constructor(){
+    this.app=Fastify({logger: true}).withTypeProvider<TypeBoxTypeProvider>();
     this.config=utils.read_typebox('./config.json',this.config_schema)
     this.db=utils.mysql_pool<DB>(this.config.connection) 
     register_standard_plugins(this.app) 
   
-    app.addHook('onRequest',this.on_request)
-    app.get('/login',(request,reply)=>
+    this.app.addHook('onRequest',this.on_request)
+    this.app.get('/login',(request,reply)=>
       send_body(reply,{body:render_login_form()})
     )    
-    app.get('/*',this.send_page)
+    this.app.post('/login',{ schema: { body: common.login_schema } },(request,reply)=>{
+      const { email, password } = request.body;
+      send_body(reply,{body:render_login_form()})
+    })
+    this.app.get('/*',this.send_page)
   }
   async make_state(request:FastifyRequest, reply:FastifyReply){
     const {secret}=this.config
@@ -163,6 +169,7 @@ class MyServer{
   }
   async start(){
     this.cache=await make_cache(this.db)   
+    await this.app.listen({ port: 81 })
   }
 
   send_page:RouteHandlerMethod =async  (request, reply)=> {
@@ -182,9 +189,7 @@ class MyServer{
   }
 }
 async function bootstap(){
-  const app = Fastify({logger: true})
-  const server= new MyServer(app)
+  const server= new MyServer()
   await server.start()
-  await app.listen({ port: 81 })
 }
 await bootstap()

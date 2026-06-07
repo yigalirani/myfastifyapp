@@ -241,7 +241,7 @@ interface FieldDef {
 }
 export function convert_schema(schema: TSchema): FieldDef[] {
   const { properties } = schema;
-  const ans: FieldDef[] = Object.entries(properties).map(([key, value]) => {
+  const ans: FieldDef[] = Object.entries(properties as object).map(([key, value]) => {
     const property_schema = value as TSchema;
     const { format, type: schema_type, title } = property_schema;
     const type = (format as string) || (schema_type as string);
