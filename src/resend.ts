@@ -13,11 +13,7 @@ interface LicenseDetails{
   note          : string|null,
   token         : string
 }
-export function calc_md5(input: string): string {
-  return crypto.createHash("md5")
-    .update(input, "utf8")
-    .digest("hex");
-}
+
 function to_trimmed_string(a:string|number|null){
   if (a==null)
     return ''
@@ -57,7 +53,7 @@ export  function sign(text: string,key:Buffer<ArrayBuffer>){
  function enc_license(a:LicenseDetails,template:string,key:Buffer<ArrayBuffer> ){
     const fields:(keyof LicenseDetails)[]=['licensed_to','expires','license_type','user_count','license_number','note','token']//can you get this from the type definition
     const normalized=fields.map(to_trimmed_string).join('')
-    const md5=calc_md5(normalized);
+    const md5=utils.calc_md5(normalized);
     const signature = sign(md5,key)
     return `<license>
     <licensed_to>${a.licensed_to}</licensed_to>
@@ -89,7 +85,7 @@ interface license_detaild{
 
 export async function resend(order_num:number){
   const {config_schema}=common
-  const {connection,salt,peper}= utils.read_typebox('./config.json',config_schema)
+  const {connection,license_salt,license_peper}= utils.read_typebox('./config.json',config_schema)
   const db=utils.mysql_pool<DB>(connection)
   const order=await db.selectFrom('mc_order').where('order_id','=',order_num).selectAll().executeTakeFirstOrThrow()
   const {lic_id}=await db.insertInto('mc_lic').defaultValues().returning('lic_id').executeTakeFirstOrThrow();
@@ -101,7 +97,7 @@ export async function resend(order_num:number){
     license_type:(order.order_product_id===2?'Non-commercial license':''),
     expires:null,
     note:null,
-    token:calc_md5(`${salt}${lic_id}${peper}`)
+    token:utils.calc_md5(`${license_salt}${lic_id}${license_peper}`)
   }
   const template=await readFile('licence_template.htm','utf8')
   const key = await readFile("private_key.pem");

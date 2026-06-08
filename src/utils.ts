@@ -8,9 +8,10 @@ import { readFileSync } from 'node:fs';
 import { createPool,type PoolOptions } from 'mysql2' 
 import { Kysely, MysqlDialect} from 'kysely'
 import type {FastifyReply, FastifyRequest} from 'fastify'
-
+import * as crypto from "node:crypto";
 import {keyBy} from 'lodash-es';
 import signature from "cookie-signature";
+import { TransformDecodeCheckError } from '@sinclair/typebox/value';
 
 /*group of gerneric functions with understood input output that can be used in other programs with another databasre schems*/
 /*export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
@@ -168,11 +169,22 @@ export function read_zod<T>(filename: string, schema: ZodType<T>): T {
 }*/
 
 export function read_typebox<T extends TSchema>(filename: string, schema: T): Static<T> {
-  const config_data = readFileSync(filename, "utf8");
-  const compiler = TypeCompiler.Compile(schema);
-  const parsed_json = JSON.parse(config_data)as unknown;
-  const ans = compiler.Decode(parsed_json);
-  return ans;
+  try{
+    const config_data = readFileSync(filename, "utf8");
+    const compiler = TypeCompiler.Compile(schema);
+    const parsed_json = JSON.parse(config_data)as unknown;
+    const ans = compiler.Decode(parsed_json);
+    return ans;
+  }catch(ex){
+    if (ex instanceof TransformDecodeCheckError){
+      console.error("failed open config file,",filename,':',ex.error.message,ex.error.path)
+      throw new Error('failed open config file',{ cause: ex })
+    }    
+    if (ex instanceof Error){
+      console.error("failed open config file,",filename,":",ex.message)
+    }
+    throw new Error("failed open config file",{ cause: ex })
+  }
 }
 export function mysql_pool<T>(connection:PoolOptions){
   const dialect = new MysqlDialect({
@@ -258,15 +270,14 @@ export function convert_schema(schema: TSchema): FieldDef[] {
   return ans;
 }
 
+
 interface GenInput{
   title?:string,
   type?:string,
   name:string,
-  data?:Record<string,string>
-  errors?:Record<string,string>
   extra?:string
 }
-function gen_input(a:GenInput){
+/*function gen_input(a:GenInput){
   const {title,name,data,errors,extra,type}=a
   const value=data?.[name]
   const error=errors?.[name]
@@ -287,13 +298,43 @@ function gen_input(a:GenInput){
        ${error_span}
        </div>
        `
-}
+}*/
 export function make_html_form<T extends TSchema>(schema:T,html:string){
   const field_defs=convert_schema(schema)
-  return function(data?:T,errors?:T){
+  type DataType=Partial<Static<T>>
+  /*type DataType = (T & {
+    params: [];
+})["static"] */
+  return function(data?:DataType,errors?:DataType){
+    function gen_input(a:GenInput){
+      const {title,name,extra,type}=a
+      const value=data?.[name as keyof DataType] /*Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.ts(7053) */
+      const error=errors?.[name as keyof DataType]
+      const value_attr=value==null?'':`value=${value.toString()}`
+      const error_span=error==null?'':`<span id="id_${name}_error" class="error_msg" aria-live="assertive">${error.toString()}</span>`;
+      return  `<div class=form_entry><label for="id_${name}">${title??name}:</label>
+          <input 
+            id="id_${name}"
+            name="${name}"
+            class="form_input"
+            type="${type??'text'}" 
+            required 
+            ${extra}
+            ${value_attr}
+            aria-invalid="true"
+            aria-describedby="id_${name}_error"
+          >
+          ${error_span}
+          </div>
+          `
+    }
+
     const fragments=[]
-    for (const {name,title,type} of field_defs)
-      fragments.push(gen_input({name,data,errors,type,title}))
+    for (const {name,title,type} of field_defs){
+      
+      fragments.push(gen_input({name,type,title}))
+    }
     const joined=fragments.join('\n')
     const ans=html.replace('###',joined)
     return ans
@@ -301,3 +342,8 @@ export function make_html_form<T extends TSchema>(schema:T,html:string){
 }
 
 
+export function calc_md5(input: string): string {
+  return crypto.createHash("md5")
+    .update(input, "utf8")
+    .digest("hex");
+}

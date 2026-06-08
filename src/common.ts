@@ -10,8 +10,10 @@ export const config_schema = Type.Object({
     connectionLimit: Type.Number(),
   }),
   secret: Type.String(),
-  salt:Type.String(),
-  peper:Type.String()
+  license_salt:Type.String(),
+  license_peper:Type.String(),
+  password_salt:Type.String()
+
 })
 
 export const login_schema = Type.Object({

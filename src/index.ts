@@ -11,6 +11,7 @@ import { marked } from 'marked'
 import fastify_static from '@fastify/static';
 import type { Kysely,Selectable} from 'kysely'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+import type {Static } from "@sinclair/typebox";
 import cookie from '@fastify/cookie';
 //import { writeFile } from 'fs/promises';
 
@@ -147,9 +148,19 @@ class MyServer{
     this.app.get('/login',(request,reply)=>
       send_body(reply,{body:render_login_form()})
     )    
-    this.app.post('/login',{ schema: { body: common.login_schema } },(request,reply)=>{
-      const { email, password } = request.body;
-      send_body(reply,{body:render_login_form()})
+    this.app.post('/login',{ schema: { body: common.login_schema } },async (request,reply)=>{
+      const {body}=request
+      const { email, password } = body
+      const user=await this.db.selectFrom('mc_user').selectAll().where('user_email', '=', email).executeTakeFirst();
+      const hashed_pass=utils.calc_md5(`${password}${this.config.password_salt}`)
+      const errors:Partial<Static<typeof common.login_schema>>={}
+      if (user==null){
+        errors.email="user not found"
+      }
+      if (user?.user_pass!==hashed_pass){
+        errors.email="user not found"
+      }
+      send_body(reply,{body:render_login_form(body,errors)})
     })
     this.app.get('/*',this.send_page)
   }
@@ -189,7 +200,13 @@ class MyServer{
   }
 }
 async function bootstap(){
-  const server= new MyServer()
-  await server.start()
+  try{
+    const server= new MyServer()
+    await server.start()
+  }catch(ex){
+    if (ex instanceof Error)
+      console.warn('failed starting the server:',ex.message)
+    process.exit(1)
+  }
 }
 await bootstap()
