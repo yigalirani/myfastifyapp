@@ -108,41 +108,6 @@ function submit(title:string){
   return `<div class=form_entry><button type="submit">${title}</button></div>`
 }
 
-/*interface Login{
-  email:string
-  password:string
-  [key: string]: string
-}*/
-/*interface GenInput{
-  title?:string,
-  type?:string,
-  name:string,
-  data?:Record<string,string>
-  errors?:Record<string,string>
-  extra?:string
-}*/
-/*function gen_input(a:GenInput){
-  const {title,name,data,errors,extra,type}=a
-  const value=data?.[name]
-  const error=errors?.[name]
-  const value_attr=value==null?'':`value=${value}`
-  const error_span=error==null?'':`<span id="id_${name}_error" class="error_msg" aria-live="assertive">${error}</span>`;
-  return  `<div class=form_entry><label for="id_${name}">${title??name}:</label>
-      <input 
-        id="id_${name}"
-        name="${name}"
-        class="form_input"
-        type="${type??'text'}" 
-        required 
-        ${extra}
-        ${value_attr}
-        aria-invalid="true"
-        aria-describedby="id_${name}_error"
-      >
-       ${error_span}
-       </div>
-       `
-}*/
 export const render_login_form=make_html_form(login_schema,
 `<form action="/login" method="POST">
 <div class=login>

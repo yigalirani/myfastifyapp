@@ -25,13 +25,13 @@ async function print_menu(db:Kysely<DB>) {
   }).join('\n')
 }
 async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when needed
-  const posts:Selectable<McPost>[]=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
-  const posts_index=keyBy(posts,'post_name')
-  return{
-    posts,
-    posts_index,
-    menu:await print_menu(db),
-    meta:keyBy(await db.selectFrom('mc_meta').selectAll().execute(),'meta_post_id')
+    const posts:Selectable<McPost>[]=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
+    const posts_index=keyBy(posts,'post_name')
+    return{
+      posts,
+      posts_index,
+      menu:await print_menu(db),
+      meta:keyBy(await db.selectFrom('mc_meta').selectAll().execute(),'meta_post_id')
   }
 }
 type Cache=Awaited<ReturnType<typeof make_cache>>
@@ -100,8 +100,8 @@ declare module 'fastify' {
   }
 }
 function send_body(reply:FastifyReply,a:BodyParams){
-  const {cache:{menu},session_id}=reply.state
-  reply.type('text/html').send(print_body({...a,session_id,menu}))
+  const {cache:{menu},session_id,user}=reply.state
+  reply.type('text/html').send(print_body({...a,session_id,menu,user}))
 }  
 function register_standard_plugins(app:FastifyInstance){
   app.register(fastify_static, {
