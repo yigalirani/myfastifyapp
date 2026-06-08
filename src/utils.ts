@@ -228,15 +228,19 @@ export function calc_page(req:FastifyRequest,reply:FastifyReply){
   }
 
 
-
+export function calc_md5(input: string): string {
+  return crypto.createHash("md5")
+    .update(input, "utf8")
+    .digest("hex");
+}
 export function calc_session_id(request:FastifyRequest,reply:FastifyReply,secret:string){
   const {session_id:exist}=request.cookies
   if (exist!=null){
     const unsigned=signature.unsign(exist, secret)
-    if (unsigned!==false)
+    if (unsigned!==false&&unsigned.length===32)
       return unsigned
   }
-  const ans=crypto.randomUUID()
+  const ans=calc_md5(crypto.randomUUID())
   const session_id=signature.sign(ans, secret)
   reply.setCookie('session_id', session_id, {
     path: '/',
@@ -250,15 +254,21 @@ interface FieldDef {
   name: string;
   type: string;
   title?: string;
+  required:boolean
 }
 export function convert_schema(schema: TSchema): FieldDef[] {
-  const { properties } = schema;
-  const ans: FieldDef[] = Object.entries(properties as object).map(([key, value]) => {
+  const { properties,required=[] } = schema;
+  const ans: FieldDef[] = Object.entries(properties as object).map(([name, value]) => {
     const property_schema = value as TSchema;
     const { format, type: schema_type, title } = property_schema;
     const type = (format as string) || (schema_type as string);
 
-    const field: FieldDef = { name: key, type };
+    const field: FieldDef = { 
+      name, 
+      type,
+      title, 
+      required:(required as string[]).includes(name)
+    };
 
     if (typeof title === 'string') {
       field.title = title;
@@ -271,12 +281,6 @@ export function convert_schema(schema: TSchema): FieldDef[] {
 }
 
 
-interface GenInput{
-  title?:string,
-  type?:string,
-  name:string,
-  extra?:string
-}
 /*function gen_input(a:GenInput){
   const {title,name,data,errors,extra,type}=a
   const value=data?.[name]
@@ -306,34 +310,47 @@ export function make_html_form<T extends TSchema>(schema:T,html:string){
     params: [];
 })["static"] */
   return function(data?:DataType,errors?:DataType){
-    function gen_input(a:GenInput){
-      const {title,name,extra,type}=a
+    function gen_input(a:FieldDef){
+      const {title,name,type,required}=a
       const value=data?.[name as keyof DataType] /*Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
   No index signature with a parameter of type 'string' was found on type '{}'.ts(7053) */
       const error=errors?.[name as keyof DataType]
-      const value_attr=value==null?'':`value=${value.toString()}`
-      const error_span=error==null?'':`<span id="id_${name}_error" class="error_msg" aria-live="assertive">${error.toString()}</span>`;
+  
+      const value_attr=function(){
+        if (value==null)
+          return  ''
+        return `value="${value.toString()}"`
+      }()
+      const error_tags=function(){
+        if (error==null)
+          return {
+            span:'',
+            aria_attribs:'',
+          }
+        return {
+          span:`<span id="id_${name}_error" class="error_msg" aria-live="assertive">${error.toString()}</span>`,
+          aria_attribs:`aria-invalid="true" aria-describedby="id_${name}_error"`
+        }
+      }()
       return  `<div class=form_entry><label for="id_${name}">${title??name}:</label>
           <input 
             id="id_${name}"
             name="${name}"
             class="form_input"
-            type="${type??'text'}" 
-            required 
-            ${extra}
+            type="${type}" 
+            ${required?"required":''}
             ${value_attr}
-            aria-invalid="true"
-            aria-describedby="id_${name}_error"
+            ${error_tags.aria_attribs}
+            
           >
-          ${error_span}
+          ${error_tags.span}
           </div>
           `
     }
 
     const fragments=[]
-    for (const {name,title,type} of field_defs){
-      
-      fragments.push(gen_input({name,type,title}))
+    for (const field_def of field_defs){
+      fragments.push(gen_input(field_def))
     }
     const joined=fragments.join('\n')
     const ans=html.replace('###',joined)
@@ -342,8 +359,3 @@ export function make_html_form<T extends TSchema>(schema:T,html:string){
 }
 
 
-export function calc_md5(input: string): string {
-  return crypto.createHash("md5")
-    .update(input, "utf8")
-    .digest("hex");
-}

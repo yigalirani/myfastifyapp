@@ -1,6 +1,5 @@
 import { Type} from '@sinclair/typebox'
 export const config_schema = Type.Object({
-  connectionString: Type.String(),
   connection:Type.Object({
     database: Type.String(),
     host: Type.String(),
@@ -18,7 +17,7 @@ export const config_schema = Type.Object({
 
 export const login_schema = Type.Object({
   email:Type.String({ format: 'email' }),
-  password:Type.String()
+  password:Type.String({format: 'password'})
 })
 /*
 "fields":[

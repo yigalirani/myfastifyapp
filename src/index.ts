@@ -140,7 +140,7 @@ class MyServer{
   app
   constructor(){
     this.app=Fastify({logger: true}).withTypeProvider<TypeBoxTypeProvider>();
-    this.config=utils.read_typebox('./config.json',this.config_schema)
+    this.config=utils.read_typebox('./config_local.json',this.config_schema)
     this.db=utils.mysql_pool<DB>(this.config.connection) 
     register_standard_plugins(this.app) 
   
@@ -151,16 +151,28 @@ class MyServer{
     this.app.post('/login',{ schema: { body: common.login_schema } },async (request,reply)=>{
       const {body}=request
       const { email, password } = body
+      const {session_id}=reply.state
       const user=await this.db.selectFrom('mc_user').selectAll().where('user_email', '=', email).executeTakeFirst();
       const hashed_pass=utils.calc_md5(`${password}${this.config.password_salt}`)
-      const errors:Partial<Static<typeof common.login_schema>>={}
-      if (user==null){
-        errors.email="user not found"
+      const errors=function(){
+        const ans:Partial<Static<typeof common.login_schema>>={}
+        if (user==null){
+          ans.email="user not found"
+          return ans
+        }
+        if (user.user_pass!==hashed_pass){
+          ans.password="wrong password"
+        }
+        return ans
+      }()
+      if (Object.entries(errors).length)
+        send_body(reply,{body:render_login_form(body,errors)})
+      try{
+        await  this.db.updateTable('mc_user').set({ user_session:session_id }).where('user_email', '=', email).executeTakeFirst();
+      }catch(ex){
+        console.warn(ex)
       }
-      if (user?.user_pass!==hashed_pass){
-        errors.email="user not found"
-      }
-      send_body(reply,{body:render_login_form(body,errors)})
+      reply.redirect('/')
     })
     this.app.get('/*',this.send_page)
   }

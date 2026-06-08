@@ -638,3 +638,6 @@ button{
 .form_comment{
   font-size: small;
 }
+.error_msg{
+  color:red;
+}
