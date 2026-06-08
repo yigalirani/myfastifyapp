@@ -147,7 +147,13 @@ class MyServer{
     this.app.addHook('onRequest',this.on_request)
     this.app.get('/login',(request,reply)=>
       send_body(reply,{body:render_login_form()})
-    )    
+    )   
+    this.app.get('/logout',async (request,reply)=>{
+      const {user}=reply.state
+      if (user)
+        await  this.db.updateTable('mc_user').set({ user_session:'' }).where('user_email', '=', user.user_email).executeTakeFirst();
+      reply.redirect('/')
+    })
     this.app.post('/login',{ schema: { body: common.login_schema } },async (request,reply)=>{
       const {body}=request
       const { email, password } = body
@@ -170,7 +176,7 @@ class MyServer{
       try{
         await  this.db.updateTable('mc_user').set({ user_session:session_id }).where('user_email', '=', email).executeTakeFirst();
       }catch(ex){
-        console.warn(ex)
+        console.warn(ex) //this is for debug. todo remove
       }
       reply.redirect('/')
     })
