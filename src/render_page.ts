@@ -45,14 +45,14 @@ export function print_body(p: BodyParams){
         return "<a href='/login'>Login   </a>  ";
     const {user_login,user_full_name}=user
     const logged_as=user_full_name??user_login
-    return `Logged in as: ${logged_as} | <a href='/account'>my account</a> |  <a href='/logout>Logout</a>`;
+    return `Logged in as: ${logged_as} | <a href='/account'>my account</a> |  <a href='/logout'>Logout</a>`;
   }()
 
   function div(a: string | undefined, class_name: string) {
     if (a == null || a === '')
       return ''
     return `<div class='${class_name}'>${a}</div>`
-  }
+}
   //       ${div(next, 'toc_box_next_link')}
   const logo=((meta?.meta_logo) ?? '')
   return `<!DOCTYPE html>
@@ -75,7 +75,7 @@ export function print_body(p: BodyParams){
       <div class="wrapper">
         <div class="header">
           <a href='/cart_show'><img class=shop_header_icon src=/cart.png></a>
-                                  ${logo}
+            ${logo}
            ${div(login_menu, 'header_login')}
           <div class=header_logo>
             <a href='/' ><img src='/logo.png' alt="xml marker"></a>
