@@ -56,12 +56,12 @@ export function print_body(p: BodyParams){
       <a href='#' class=toggler> Edit </a><br>
       <div class="toggled hidden">
         edit page:
-        <form action='/submit_edit' method='post'>
+        <form  method='post'>
           <input type='hidden' name='url' value='${post_title}'>
-          <textarea NAME='post_content' cols=80 rows=30>${edit_content}</textarea><br>
-          <input type='hidden' name='post_id' value='${ID}'>
-          <input name='action' type='submit' value='Submit' >
-          <input name='action' type='submit' value='Preview' >
+          <textarea NAME='post_markdown' cols=80 rows=30>${edit_content}</textarea><br>
+          <input type='hidden' name='ID' value='${ID}'>
+          <input name='action' type='submit' value='Preview' formaction='/edit_preview'>
+          <input name='action' type='submit' value='Submit' formaction='/edit_submit'>
         </form>
       </div>`
   }()

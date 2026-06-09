@@ -19,4 +19,10 @@ export const login_schema = Type.Object({
   email:Type.String({ format: 'email' }),
   password:Type.String({format: 'password'})
 })
+export const post_schema = Type.Object({
+  ID:Type.Number(),
+  post_markdown:Type.String()
+})
+
+
 export type Login=Static<typeof login_schema>
