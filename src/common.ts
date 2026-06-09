@@ -1,4 +1,4 @@
-import { Type} from '@sinclair/typebox'
+import { Type,type Static} from '@sinclair/typebox'
 export const config_schema = Type.Object({
   connection:Type.Object({
     database: Type.String(),
@@ -19,3 +19,4 @@ export const login_schema = Type.Object({
   email:Type.String({ format: 'email' }),
   password:Type.String({format: 'password'})
 })
+export type Login=Static<typeof login_schema>

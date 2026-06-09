@@ -1,4 +1,4 @@
-import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply,type onRequestAsyncHookHandler} from 'fastify'
+import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply,type onRequestAsyncHookHandler,type RouteHandler} from 'fastify'
 import type {DB,McPost,McUser} from './autogen/database.js'
 import * as utils from './utils.js'
 import * as textile from './textile.js'
@@ -162,7 +162,12 @@ class MyServer{
         await  this.db.updateTable('mc_user').set({ user_session:'' }).where('user_email', '=', user.user_email).executeTakeFirst();
       reply.redirect('/')
     })
-    this.app.post('/login',{ schema: { body: common.login_schema } },async (request,reply)=>{
+    this.app.get('/*',this.send_page)
+    this.app.post('/login',{ schema: { body: common.login_schema } },this.on_login)
+  }
+  on_login:RouteHandler<{ Body: common.Login }>= async(request,reply)=>{
+      //dont try to make this standlone functin, its impossible per chat https://chatgpt.com/c/6a27dc07-fe2c-83ed-b0bc-03edfe586c3c
+      //edit: i did change it but it has problems, it is not type safe completly https://claude.ai/share/b3d676d0-93f7-4aa4-813b-7f87e05b3ae1
       const {body}=request
       const { email, password } = body
       const {session_id}=reply.state
@@ -174,21 +179,14 @@ class MyServer{
           ans.email="user not found"
           return ans
         }
-        if (user.user_pass!==hashed_pass){
+        if (user.user_pass!==hashed_pass)
           ans.password="wrong password"
-        }
         return ans
       }()
       if (Object.entries(errors).length)
         send_body(reply,{body:render_login_form(body,errors)})
-      try{
-        await  this.db.updateTable('mc_user').set({ user_session:session_id }).where('user_email', '=', email).executeTakeFirst();
-      }catch(ex){
-        console.warn(ex) //this is for debug. todo remove
-      }
+      await  this.db.updateTable('mc_user').set({ user_session:session_id }).where('user_email', '=', email).executeTakeFirst();
       reply.redirect('/')
-    })
-    this.app.get('/*',this.send_page)
   }
   async make_state(request:FastifyRequest, reply:FastifyReply){
     const {secret}=this.config
@@ -222,10 +220,10 @@ class MyServer{
     //const markdown=textile.textileToMarkdown(post.post_content||'')
     //writeFile('mark.md',markdown)
     const {ID,post_markdown}=post
-    const body=await marked(post_markdown??'')
+    const body=await marked(post_markdown)
     const toc= toc_box_head(cache,post.ID)
     //const edit_content=user?.user_status===2&&body;
-    const edit_content=user?.user_status===2?post_markdown??undefined:undefined
+    const edit_content=user?.user_status===2?post_markdown:undefined
     send_body(reply,{...post,body,...toc,session_id,ID,edit_content})
   }
 }
