@@ -1,15 +1,11 @@
-/* 
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-function toggle(id){
-    //var elem=window.event.srcElement;
-    //elem.getParent().style.background='red';
-    var n=document.getElementById(id);
-    if (n.style.display=='none')
-        n.style.display='table';
-    else
-        n.style.display='none';
-    return false;
-};
+window.onclick=(evt)=>{
+  const {target}=evt
+  if (!(target instanceof HTMLElement) || !target.classList.contains('toggler'))
+    return
+  const parent=target.parentElement
+  if (parent==null)
+    return
+  for (const toggled of parent.querySelectorAll('.toggled')){
+    toggled.classList.toggle('hidden')
+  }
+}

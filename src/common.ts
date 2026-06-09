@@ -19,8 +19,3 @@ export const login_schema = Type.Object({
   email:Type.String({ format: 'email' }),
   password:Type.String({format: 'password'})
 })
-/*
-"fields":[
-  {"name":'email',"type":'email'},
-  {"name":'password',"type":'password'}
-]*/

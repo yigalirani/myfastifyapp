@@ -23,6 +23,7 @@ export interface BodyParams{
   meta?:Meta
   post_sidebar?:string
   post_title?:string
+  ID?:number,
   menu?:string
   body:string
   toc_section?: string
@@ -30,10 +31,11 @@ export interface BodyParams{
   last?:string
   session_id?:string
   user?:Selectable<McUser>|null
+  edit_content?:string
 }  
 
 export function print_body(p: BodyParams){
-  const { meta, post_sidebar, post_title, menu, body, toc_section,/*next,*/last,session_id,user }=p
+  const { meta, post_sidebar, post_title, menu, body, toc_section,/*next,*/last,session_id,user,edit_content,ID}=p
   const meta_section=function(){
     if (meta==null)
       return ''
@@ -47,12 +49,28 @@ export function print_body(p: BodyParams){
     const logged_as=user_full_name??user_login
     return `Logged in as: ${logged_as} | <a href='/account'>my account</a> |  <a href='/logout'>Logout</a>`;
   }()
+  const edit_content_html=function(){
+    if (edit_content==null||ID==null)
+      return ''
+    return `
+      <a href='#' class=toggler> Edit </a><br>
+      <div class="toggled hidden">
+        edit page:
+        <form action='/submit_edit' method='post'>
+          <input type='hidden' name='url' value='${post_title}'>
+          <textarea NAME='post_content' cols=80 rows=30>${edit_content}</textarea><br>
+          <input type='hidden' name='post_id' value='${ID}'>
+          <input name='action' type='submit' value='Submit' >
+          <input name='action' type='submit' value='Preview' >
+        </form>
+      </div>`
+  }()
 
   function div(a: string | undefined, class_name: string) {
     if (a == null || a === '')
       return ''
     return `<div class='${class_name}'>${a}</div>`
-}
+  }
   //       ${div(next, 'toc_box_next_link')}
   const logo=((meta?.meta_logo) ?? '')
   return `<!DOCTYPE html>
@@ -85,12 +103,13 @@ export function print_body(p: BodyParams){
           </div>
         </div>
           <div class=content>
-          <div class=sidebar>
-              ${session_id??"session id not found"}
-              ${div(toc_section, 'toc_box')}
-              ${div(post_sidebar, 'post_sidebar')}
+              <div class=sidebar>
+                ${session_id??"session id not found"}
+                ${div(toc_section, 'toc_box')}
+                ${div(post_sidebar, 'post_sidebar')}
               </div>
               ${tag(post_title,'h1')}
+              ${edit_content_html}
               ${div(body, 'content_body')}
               ${div(last, 'toc_box_next_link')}              
        

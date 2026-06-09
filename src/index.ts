@@ -202,7 +202,7 @@ class MyServer{
   }
 
   send_page:RouteHandlerMethod =async  (request, reply)=> {
-    const {cache,session_id}= reply.state
+    const {cache,session_id,user}= reply.state
     const page=utils.calc_page(request,reply)   
     if (page==null) return 
     
@@ -214,12 +214,14 @@ class MyServer{
     //writeFile('mark.md',markdown)
     const body=await marked(markdown)
     const toc= toc_box_head(cache,post.ID)
-    send_body(reply,{...post,body,...toc,session_id})
+    const {ID}=post
+    //const edit_content=user?.user_status===2&&body;
+    const edit_content=user?.user_status===2?markdown:undefined
+    send_body(reply,{...post,body,...toc,session_id,ID,edit_content})
   }
 }
 async function bootstap(){
-  try{
-    const server= new MyServer()
+  try{    const server= new MyServer()
     await server.start()
   }catch(ex){
     if (ex instanceof Error)
