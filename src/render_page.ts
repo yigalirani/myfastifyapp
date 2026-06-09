@@ -1,5 +1,5 @@
 import type{ Selectable } from "kysely"
-import type{ McUser } from "./autogen/database.js"
+import type{ McUser,McMeta } from "./autogen/database.js"
 import { login_schema} from "./common.js"
 import {make_html_form} from "./utils.js"
 
@@ -9,18 +9,14 @@ global $g;
 date_default_timezone_set('America/New_York');
 $date=date("Y");
 */
-interface Meta{
-  meta_description:string|null
-  meta_keywords:string|null
-  meta_logo:string|null
-}
+
 function tag(a:string|undefined,tag_name:string){
   if (a==null)
     return ''
   return `<${tag_name}>${a}</${tag_name}>`
 }
 export interface BodyParams{
-  meta?:Meta
+  meta?:Selectable<McMeta>|null
   post_sidebar?:string
   post_title?:string
   ID?:number,
@@ -73,6 +69,11 @@ export function print_body(p: BodyParams){
   }
   //       ${div(next, 'toc_box_next_link')}
   const logo=((meta?.meta_logo) ?? '')
+  const title=function(){
+    if (meta==null)
+      return post_title
+    return `${meta.meta_slogen} - ${post_title}`
+  }()
   return `<!DOCTYPE html>
   <html>
 
@@ -86,7 +87,7 @@ export function print_body(p: BodyParams){
     <script type="text/javascript" src="/client/script.js"></script>
   ${meta_section}
 
-  <title>${post_title}</title>
+  <title>${title}</title>
 
   </head>
     <body>
