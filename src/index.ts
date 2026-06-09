@@ -164,19 +164,20 @@ class MyServer{
     })
     this.app.get('/*',this.send_page)
     this.app.post('/login',{ schema: { body: common.login_schema } },this.on_login)
-    this.app.post('/edit_preview',{ schema: { body: common.post_schema }},async (request,reply)=>{
-      const {cache,session_id,user}= reply.state      
-      const {ID,post_markdown}=request.body
-      const post=await this.db.selectFrom('mc_post').selectAll().where('ID', '=', ID).executeTakeFirst(); //cant use the cache because i only have the id and the cache is indected by post_name
-      if (post==null)
-        return send_body(reply,{body:'page not found'})
-      const body=await marked(post_markdown)
-      const toc= toc_box_head(cache,post.ID)
-      if (user?.user_status===2)
-        send_body(reply,{...post,body,...toc,session_id,ID,edit_content:post_markdown})      
-      else
-        reply.redirect('/')
-    })
+    this.app.post('/edit_preview',{ schema: { body: common.post_schema }},this.on_preview)
+  }
+  on_preview:RouteHandler<{ Body: Static<typeof common.post_schema> }>=async (request,reply)=>{
+    const {cache,session_id,user}= reply.state      
+    const {ID,post_markdown}=request.body
+    const post=await this.db.selectFrom('mc_post').selectAll().where('ID', '=', ID).executeTakeFirst(); //cant use the cache because i only have the id and the cache is indected by post_name
+    if (post==null)
+      return send_body(reply,{body:'page not found'})
+    const body=await marked(post_markdown)
+    const toc= toc_box_head(cache,post.ID)
+    if (user?.user_status===2)
+      send_body(reply,{...post,body,...toc,session_id,ID,edit_content:post_markdown})      
+    else
+      reply.redirect('/')
   }
   on_login:RouteHandler<{ Body: common.Login }>= async(request,reply)=>{
       //dont try to make this standlone functin, its impossible per chat https://chatgpt.com/c/6a27dc07-fe2c-83ed-b0bc-03edfe586c3c
