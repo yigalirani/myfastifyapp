@@ -129,8 +129,16 @@ function register_standard_plugins(app:FastifyInstance){
   });     
   app.register(form_body);
 }
-
-
+//@ts-expect-error this function converts all posts from textile to markdown in one shot, worked super fast to develop
+async function _convert_it(){
+  const config=utils.read_typebox('./config_local.json',common.config_schema)
+  const db=utils.mysql_pool<DB>(config.connection) 
+  const posts=await db.selectFrom('mc_post').selectAll().execute()
+  for (const {ID,post_content} of posts){
+    const post_markdown=textile.textileToMarkdown(post_content||'')
+    await db.updateTable('mc_post').set({post_markdown}).where('ID', '=', ID).executeTakeFirst();
+  }
+}
 
 class MyServer{
   config_schema=common.config_schema
@@ -210,13 +218,14 @@ class MyServer{
     if (post==null)
       return send_body(reply,{body:'page not found'})
     //writeFile('debug/textile.txt',post.post_content)
-    const markdown=textile.textileToMarkdown(post.post_content||'')
+    //const markdown=textile.textileToMarkdown(post.post_content||'')
+    //const markdown=textile.textileToMarkdown(post.post_content||'')
     //writeFile('mark.md',markdown)
-    const body=await marked(markdown)
+    const {ID,post_markdown}=post
+    const body=await marked(post_markdown??'')
     const toc= toc_box_head(cache,post.ID)
-    const {ID}=post
     //const edit_content=user?.user_status===2&&body;
-    const edit_content=user?.user_status===2?markdown:undefined
+    const edit_content=user?.user_status===2?post_markdown??undefined:undefined
     send_body(reply,{...post,body,...toc,session_id,ID,edit_content})
   }
 }
@@ -229,4 +238,5 @@ async function bootstap(){
     process.exit(1)
   }
 }
+//await convert_it()
 await bootstap()

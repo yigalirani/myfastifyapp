@@ -92,6 +92,7 @@ export function print_body(p: BodyParams){
     <body>
       <div class="wrapper">
         <div class="header">
+        ${session_id??"session id not found"}
           <a href='/cart_show'><img class=shop_header_icon src=/cart.png></a>
             ${logo}
            ${div(login_menu, 'header_login')}
@@ -104,7 +105,7 @@ export function print_body(p: BodyParams){
         </div>
           <div class=content>
               <div class=sidebar>
-                ${session_id??"session id not found"}
+                
                 ${div(toc_section, 'toc_box')}
                 ${div(post_sidebar, 'post_sidebar')}
               </div>
