@@ -164,9 +164,10 @@ class MyServer{
     })
     this.app.get('/*',this.send_page)
     this.app.post('/login',{ schema: { body: common.login_schema } },this.on_login)
-    this.app.post('/edit_preview',{ schema: { body: common.post_schema }},this.on_preview)
+    this.app.post('/edit_preview',{ schema: { body: common.post_schema }},this.on_edit('preview'))
+    this.app.post('/edit_submit',{ schema: { body: common.post_schema }},this.on_edit('submit'))
   }
-  on_preview:RouteHandler<{ Body: Static<typeof common.post_schema> }>=async (request,reply)=>{
+  on_edit = (mode: 'preview' | 'submit'): RouteHandler<{ Body: Static<typeof common.post_schema> }> => async (request, reply) => {
     const {cache,session_id,user}= reply.state      
     const {ID,post_markdown}=request.body
     const post=await this.db.selectFrom('mc_post').selectAll().where('ID', '=', ID).executeTakeFirst(); //cant use the cache because i only have the id and the cache is indected by post_name
@@ -174,10 +175,15 @@ class MyServer{
       return send_body(reply,{body:'page not found'})
     const body=await marked(post_markdown)
     const toc= toc_box_head(cache,post.ID)
-    if (user?.user_status===2)
-      send_body(reply,{...post,body,...toc,session_id,ID,edit_content:post_markdown})      
-    else
+    if (user?.user_status!==2){
       reply.redirect('/')
+      return
+    }
+    if (mode==='preview')
+      return send_body(reply,{...post,body,...toc,session_id,ID,edit_content:post_markdown})      
+    await this.db.updateTable('mc_post').set({post_markdown }).where('ID','=', ID).execute()
+    this.cache=await make_cache(this.db)//invalidating the cache after db update
+    reply.redirect(`/${post.post_name}.htm`)
   }
   on_login:RouteHandler<{ Body: common.Login }>= async(request,reply)=>{
       //dont try to make this standlone functin, its impossible per chat https://chatgpt.com/c/6a27dc07-fe2c-83ed-b0bc-03edfe586c3c
