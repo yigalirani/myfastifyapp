@@ -35,6 +35,26 @@ async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when neede
   }
 }
 type Cache=Awaited<ReturnType<typeof make_cache>>
+/*function toc_comments(comments:Selectable<McComment>) {
+    const toc=new utils.TOC({
+        get_fields(a:Selectable<McComment>){
+          return{
+            id:a.comment_id,
+            parent_id:a.comment_parent_id,
+            is_start:a.comment_parent_id===0
+          }
+        },
+        render_item(data:Selectable<McComment>){
+          const {post_title,post_name}=data
+          return{
+            title:post_title,
+            href:`/${post_name}.htm`
+          }
+        }
+      },
+      cache.posts  
+    ).ans  
+}*/
 function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
     const toc=new utils.TOC({
         get_fields(a:Selectable<McPost>){
@@ -44,12 +64,10 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
           }
         },
         start_id:post_id,
-        render_item(data:Selectable<McPost>){
+        render_item(data:Selectable<McPost>,class_name?:string){
           const {post_title,post_name}=data
-          return{
-            title:post_title,
-            href:`/${post_name}.htm`
-          }
+          const class_attr=class_name?`class='class_name'`:''
+          return `<a ${class_attr} href="/${post_name}.htm}">${post_title}</a>`
         }
       },
       cache.posts  
@@ -99,6 +117,7 @@ declare module 'fastify' {
     state: State;
   }
 }
+
 function send_body(reply:FastifyReply,a:BodyParams){
   const {cache:{menu},session_id,user}=reply.state
   reply.type('text/html').send(print_body({...a,session_id,menu,user}))
@@ -233,8 +252,8 @@ class MyServer{
     if (page==null) return 
     
     const post=cache.posts_index[page]
-    if (post==null)
-      return send_body(reply,{body:'page not found'})
+    if (post==null) 
+      return send_body(reply,{body:'page not found'}) 
     //writeFile('debug/textile.txt',post.post_content)
     //const markdown=textile.textileToMarkdown(post.post_content||'')
     //const markdown=textile.textileToMarkdown(post.post_content||'')
@@ -242,6 +261,7 @@ class MyServer{
     const {ID,post_markdown}=post
     const body=await marked(post_markdown)
     const toc= toc_box_head(cache,post.ID)
+    //const comments=this.db.selectFrom('mc_comment_view').selectAll().where("comment_post_id","=",ID).selectAll().execute()
     //const edit_content=user?.user_status===2&&body;
     const edit_content=user?.user_status===2?post_markdown:undefined
     send_body(reply,{...post,body,...toc,session_id,ID,edit_content})

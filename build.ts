@@ -9,7 +9,7 @@ void esbuild.build({
     minifySyntax:false,
     external:["node:events"],
     format: 'esm',
-  banner: {
+  banner: { 
         js: "import { createRequire } from 'node:module';const require = createRequire(import.meta.url);"
     }    
 })

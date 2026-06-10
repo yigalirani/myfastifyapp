@@ -24,6 +24,7 @@ type TOCField=string|number
 interface TOCFields{
   id:TOCField
   parent_id:TOCField|undefined
+  is_start?:boolean
 }
 interface TocItem<T> extends TOCFields{ 
   data:T
@@ -33,8 +34,8 @@ interface TocItem<T> extends TOCFields{
 
 export interface TOCConfig<T> {
   get_fields: (a:T)=>TOCFields
-  start_id:TOCField;
-  render_item:(a:T)=>{title:string,href:string|undefined}  
+  start_id?:TOCField;
+  render_item:(a:T,class_name?:string)=>string//{title:string,href:string|undefined}  
 }
 export function tag(content:string|undefined,tag:string){ //is usefull?
   if (content==null)
@@ -64,7 +65,11 @@ export class TOC<T>{
     this.enhanced_items=items.map(this.make_item)
     this.by_id=keyBy(this.enhanced_items,'id')
     this.add_children() 
-    const item=this.by_id[this.config.start_id]
+    const start_id=this.find_start_id()
+    if (start_id==null)
+      throw new Error ("start id not found")
+    const item=this.by_id[start_id]
+
     this.parent_path=this.calc_parent_path(item)
     const first_parent_path=this.parent_path[0]
     if (item==null || first_parent_path==null)
@@ -78,6 +83,15 @@ export class TOC<T>{
       last,
       parent_path:this.parent_path
     }
+  }
+  find_start_id(){    
+    if (this.config.start_id!=null)
+      return this.config.start_id
+    for (const item of this.enhanced_items)
+      if (item.is_start)
+        return item.id
+        
+
   }
   make_item=(data:T)=>{
     const fields=this.config.get_fields(data)
@@ -101,10 +115,8 @@ export class TOC<T>{
       return
     const pos=parent.children.indexOf(item)
     const ans=parent.children[pos+dpos]
-    if (ans!=null){
-      const {title,href}=this.config.render_item(ans.data)
-      return `<a href="${href}">${caption} - ${title}</a>`
-    }
+    if (ans!=null)
+      return this.config.render_item(ans.data)
     return this.calc_next(parent,dpos,caption)
   } 
   
@@ -112,15 +124,17 @@ export class TOC<T>{
     const folder=item.children.length>0
     if (top&&!folder)
       return ''
-    const {title,href}=this.config.render_item(item.data)
+    const {parent_path,config}=this
+    const rendered_item=config.render_item(item.data)
+    
     const icon=folder?'folder':'page_text'
-    const expand=top||this.parent_path.includes(item)
+    const expand=top||parent_path.includes(item)
     const {id}=item
     const class_def=(id===this.config.start_id?'class=toc_box_selected':'')
     const first=calc_first_non_folder(item).data
-    const first_render=this.config.render_item(first)    
+    const first_render=this.config.render_item(first,class_def)    
     if (!expand||!folder)
-      return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
+      return `<li>${first_render}</li>`
     const children=item.children.map(x=>this.render_toc(x,false)).join('\n')
     const ul= `<ul>${children}</ul>`
 
@@ -131,7 +145,7 @@ export class TOC<T>{
     const selected=parent_path.at(-1)
     if (selected==null)
       return ''
-    const {title,href}=render_item(selected)
+    const {title,href}=render_ item(selected)
     return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
   }  
   add_children(){
