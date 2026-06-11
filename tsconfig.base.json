@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "noUnusedLocals": true,
+    ///"noUnusedLocals": true,
     "composite": true,
     /* Language and Environment */
     "target": "ES2023",

@@ -24,7 +24,6 @@ type TOCField=string|number
 interface TOCFields{
   id:TOCField
   parent_id:TOCField|undefined
-  is_start?:boolean
 }
 interface TocItem<T> extends TOCFields{ 
   data:T
@@ -34,8 +33,8 @@ interface TocItem<T> extends TOCFields{
 
 export interface TOCConfig<T> {
   get_fields: (a:T)=>TOCFields
-  start_id?:TOCField;
-  render_item:(a:T,class_name?:string)=>string//{title:string,href:string|undefined}  
+  start_id:TOCField;
+  render_item:(a:T)=>{title:string,href:string|undefined}  
 }
 export function tag(content:string|undefined,tag:string){ //is usefull?
   if (content==null)
@@ -53,23 +52,34 @@ function calc_first_non_folder<T>(item:TocItem<T>){
 //type Atom=string|number|boolean|null|undefined
 
 
-export class TOC<T>{
-  by_id
-  enhanced_items
-  parent_path
-  ans
-  constructor(
-    public config:TOCConfig<T>,
-    public items: T[]
-  ){
-    this.enhanced_items=items.map(this.make_item)
-    this.by_id=keyBy(this.enhanced_items,'id')
-    this.add_children() 
-    const start_id=this.find_start_id()
-    if (start_id==null)
-      throw new Error ("start id not found")
-    const item=this.by_id[start_id]
-
+function TOC<T>(config:TOCConfig<T>,items: T[]){
+    function make_item(data:T){
+      const fields=config.get_fields(data)
+      const ans:TocItem<T>={
+        data,
+        children:[],
+        next:undefined, 
+        ...fields
+      }
+      return ans
+    }  
+    const enhanced_items=items.map(make_item)
+    const by_id=keyBy(enhanced_items,'id')
+    const _=function (){
+      for (const item of enhanced_items){
+        /*if (item==null) //this is not needed because for of loop guarantee type non null
+          continue*/
+        const {parent_id}=item
+        if (parent_id==null)
+          continue
+        const parent_item=by_id[parent_id]
+        if (parent_item==null)
+          continue
+        parent_item.children.push(item)
+      }
+    }()
+    add_children(enhanced_items) 
+    const item=this.by_id[this.config.start_id]
     this.parent_path=this.calc_parent_path(item)
     const first_parent_path=this.parent_path[0]
     if (item==null || first_parent_path==null)
@@ -83,15 +93,6 @@ export class TOC<T>{
       last,
       parent_path:this.parent_path
     }
-  }
-  find_start_id(){    
-    if (this.config.start_id!=null)
-      return this.config.start_id
-    for (const item of this.enhanced_items)
-      if (item.is_start)
-        return item.id
-        
-
   }
   make_item=(data:T)=>{
     const fields=this.config.get_fields(data)
@@ -115,8 +116,10 @@ export class TOC<T>{
       return
     const pos=parent.children.indexOf(item)
     const ans=parent.children[pos+dpos]
-    if (ans!=null)
-      return this.config.render_item(ans.data)
+    if (ans!=null){
+      const {title,href}=this.config.render_item(ans.data)
+      return `<a href="${href}">${caption} - ${title}</a>`
+    }
     return this.calc_next(parent,dpos,caption)
   } 
   
@@ -124,17 +127,15 @@ export class TOC<T>{
     const folder=item.children.length>0
     if (top&&!folder)
       return ''
-    const {parent_path,config}=this
-    const rendered_item=config.render_item(item.data)
-    
+    const {title,href}=this.config.render_item(item.data)
     const icon=folder?'folder':'page_text'
-    const expand=top||parent_path.includes(item)
+    const expand=top||this.parent_path.includes(item)
     const {id}=item
     const class_def=(id===this.config.start_id?'class=toc_box_selected':'')
     const first=calc_first_non_folder(item).data
-    const first_render=this.config.render_item(first,class_def)    
+    const first_render=this.config.render_item(first)    
     if (!expand||!folder)
-      return `<li>${first_render}</li>`
+      return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
     const children=item.children.map(x=>this.render_toc(x,false)).join('\n')
     const ul= `<ul>${children}</ul>`
 
@@ -145,23 +146,25 @@ export class TOC<T>{
     const selected=parent_path.at(-1)
     if (selected==null)
       return ''
-    const {title,href}=render_ item(selected)
+    const {title,href}=render_item(selected)
     return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
   }  
-  add_children(){
-    for (const item of this.enhanced_items){
-      /*if (item==null) //this is not needed because for of loop guarantee type non null
-        continue*/
-      const {parent_id}=item
+
+  calc_parent_set(item:TocItem<T> | undefined){ //probably from the selected item to the root
+    //const item=this.by_id[this.config.start_id]
+    let cur_item=item
+    const ans=new Set<number|string>()
+    while(cur_item!=null){
+      ans.add(cur_item.id)
+      const {parent_id}=cur_item
       if (parent_id==null)
-        continue
-      const parent_item=this.by_id[parent_id]
-      if (parent_item==null)
-        continue
-      parent_item.children.push(item)
+        break
+      cur_item=this.by_id[parent_id]
     }
+    return ans    
   }
-  calc_parent_path(item:TocItem<T> | undefined){
+
+  calc_parent_path(item:TocItem<T> | undefined){ //probably from the selected item to the root
     //const item=this.by_id[this.config.start_id]
     let cur_item=item
     const ans:TocItem<T>[]=[]

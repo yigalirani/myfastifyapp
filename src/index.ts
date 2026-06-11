@@ -64,10 +64,12 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
           }
         },
         start_id:post_id,
-        render_item(data:Selectable<McPost>,class_name?:string){
+        render_item(data:Selectable<McPost>){
           const {post_title,post_name}=data
-          const class_attr=class_name?`class='class_name'`:''
-          return `<a ${class_attr} href="/${post_name}.htm}">${post_title}</a>`
+          return{
+            title:post_title,
+            href:`/${post_name}.htm`
+          }
         }
       },
       cache.posts  
@@ -148,7 +150,6 @@ function register_standard_plugins(app:FastifyInstance){
   });     
   app.register(form_body);
 }
-//@ts-expect-error this function converts all posts from textile to markdown in one shot, worked super fast to develop
 async function _convert_it(){
   const config=utils.read_typebox('./config_local.json',common.config_schema)
   const db=utils.mysql_pool<DB>(config.connection) 

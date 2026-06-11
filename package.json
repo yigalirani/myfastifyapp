@@ -15,7 +15,8 @@
       "src/autogen/*.ts",
       "src/*.ts",
       "biome.json",
-      "tsconfig.json"
+      "tsconfig.json",
+      "tsconfig.base.json"
     ],
     "biome": [
       "$lint",
