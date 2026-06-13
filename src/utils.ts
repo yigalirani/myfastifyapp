@@ -52,33 +52,18 @@ function calc_first_non_folder<T>(item:TocItem<T>){
 //type Atom=string|number|boolean|null|undefined
 
 
-function TOC<T>(config:TOCConfig<T>,items: T[]){
-    function make_item(data:T){
-      const fields=config.get_fields(data)
-      const ans:TocItem<T>={
-        data,
-        children:[],
-        next:undefined, 
-        ...fields
-      }
-      return ans
-    }  
-    const enhanced_items=items.map(make_item)
-    const by_id=keyBy(enhanced_items,'id')
-    const _=function (){
-      for (const item of enhanced_items){
-        /*if (item==null) //this is not needed because for of loop guarantee type non null
-          continue*/
-        const {parent_id}=item
-        if (parent_id==null)
-          continue
-        const parent_item=by_id[parent_id]
-        if (parent_item==null)
-          continue
-        parent_item.children.push(item)
-      }
-    }()
-    add_children(enhanced_items) 
+export class TOC<T>{
+  by_id
+  enhanced_items
+  parent_path
+  ans
+  constructor(
+    public config:TOCConfig<T>,
+    public items: T[]
+  ){
+    this.enhanced_items=items.map(this.make_item)
+    this.by_id=keyBy(this.enhanced_items,'id')
+    this.add_children() 
     const item=this.by_id[this.config.start_id]
     this.parent_path=this.calc_parent_path(item)
     const first_parent_path=this.parent_path[0]
@@ -149,22 +134,20 @@ function TOC<T>(config:TOCConfig<T>,items: T[]){
     const {title,href}=render_item(selected)
     return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
   }  
-
-  calc_parent_set(item:TocItem<T> | undefined){ //probably from the selected item to the root
-    //const item=this.by_id[this.config.start_id]
-    let cur_item=item
-    const ans=new Set<number|string>()
-    while(cur_item!=null){
-      ans.add(cur_item.id)
-      const {parent_id}=cur_item
+  add_children(){
+    for (const item of this.enhanced_items){
+      /*if (item==null) //this is not needed because for of loop guarantee type non null
+        continue*/
+      const {parent_id}=item
       if (parent_id==null)
-        break
-      cur_item=this.by_id[parent_id]
+        continue
+      const parent_item=this.by_id[parent_id]
+      if (parent_item==null)
+        continue
+      parent_item.children.push(item)
     }
-    return ans    
   }
-
-  calc_parent_path(item:TocItem<T> | undefined){ //probably from the selected item to the root
+  calc_parent_path(item:TocItem<T> | undefined){
     //const item=this.by_id[this.config.start_id]
     let cur_item=item
     const ans:TocItem<T>[]=[]
