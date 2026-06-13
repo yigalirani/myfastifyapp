@@ -1,24 +1,57 @@
 // oxlint-disable no-unsafe-call
 // oxlint-disable no-unsafe-assignment
 // oxlint-disable no-unsafe-member-access
-import { TypeCompiler } from "@sinclair/typebox/compiler";
+import { TypeCompiler }                    from "@sinclair/typebox/compiler";
 import type { TSchema, Static } from "@sinclair/typebox";
-import { readFileSync } from 'node:fs';
-//import { writeFile } from 'fs/promises';
-import { createPool,type PoolOptions } from 'mysql2' 
-import { Kysely, MysqlDialect} from 'kysely'
+import { readFileSync }                    from 'node:fs';
+import { createPool,type PoolOptions }     from 'mysql2'
+import { Kysely, MysqlDialect}             from 'kysely'
 import type {FastifyReply, FastifyRequest} from 'fastify'
-import * as crypto from "node:crypto";
-import {keyBy} from 'lodash-es';
-import signature from "cookie-signature";
-import { TransformDecodeCheckError } from '@sinclair/typebox/value';
+import * as crypto                         from "node:crypto";
+
+import signature                           from "cookie-signature";
+import { TransformDecodeCheckError }       from '@sinclair/typebox/value';
 
 /*group of gerneric functions with understood input output that can be used in other programs with another databasre schems*/
 /*export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
   return a[field]
 }*/
 
-
+export function index_tree< T,K extends keyof T >({items,id_field,parent_id_field,selected=undefined}:{
+    items:Array<T>,
+    parent_id_field:K,
+    id_field:K
+    selected?:T
+  }
+){
+  const by_id=index_array(items,id_field)
+  const parent_set=function(){// calc_parent_set(){ //probably from the selected item to the root
+    //const item=this.by_id[this.config.start_id]
+    let cur_item=selected
+    const ans=new Set<Key>()
+    while(cur_item!=null){
+      const id=cur_item[id_field]
+      if (!is_key(id))
+        break
+      ans.add(id)
+      const parent_id=cur_item[parent_id_field]
+      if (!is_key(parent_id))
+        break
+      cur_item=by_id[parent_id]
+    }
+    return ans    
+  }()
+  const children_map=function(){
+    const ans:Record<Key,T[]>={}
+    for (const item of items){
+      const parent_id=item[parent_id_field]
+      if (is_key(parent_id))
+        default_get(ans,parent_id,()=>[]).push(item)
+    }
+  }()
+  
+  return{by_id,parent_set,children_map}
+}
 
 type TOCField=string|number
 interface TOCFields{
@@ -50,6 +83,34 @@ function calc_first_non_folder<T>(item:TocItem<T>){
 }
 //type FlexRecord=Record<string, string|number>
 //type Atom=string|number|boolean|null|undefined
+type Key=string|number
+function is_key(a:unknown): a is Key{
+  return typeof a==='string' || typeof a==='number'
+
+}   
+export function index_array<T,K extends keyof T >(
+  items: T[],
+  key: K
+): Record<Key,T> {
+  const ans:Record<Key,T>={}
+  for (const item of items) {
+    const value = item[key];
+    if (value == null) continue;
+    if (is_key(value)){
+      ans[value] = item;
+    } // should warn of by type? probably not
+  }
+  return ans;
+}
+export function default_get<T>(obj:Record<Key,T>,k:Key,maker:()=>T){
+  const exists=obj[k]
+  if (exists!=null)
+    return exists
+  const ans=maker() 
+  obj[k]=ans
+  return ans
+}
+
 
 
 export class TOC<T>{
@@ -61,6 +122,7 @@ export class TOC<T>{
     public config:TOCConfig<T>,
     public items: T[]
   ){
+    
     this.enhanced_items=items.map(this.make_item)
     this.by_id=keyBy(this.enhanced_items,'id')
     this.add_children() 

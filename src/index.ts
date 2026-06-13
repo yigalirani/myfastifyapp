@@ -13,6 +13,7 @@ import type { Kysely,Selectable} from 'kysely'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import type {Static } from "@sinclair/typebox";
 import cookie from '@fastify/cookie';
+
 //import { writeFile } from 'fs/promises';
 
 
@@ -26,6 +27,7 @@ async function print_menu(db:Kysely<DB>) {
 }
 async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when needed
     const posts:Selectable<McPost>[]=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
+    utils.index_tree(posts,'ID','post_parent')
     const posts_index=keyBy(posts,'post_name')
     return{
       posts,
