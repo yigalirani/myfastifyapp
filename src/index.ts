@@ -1,18 +1,29 @@
-import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply,type onRequestAsyncHookHandler,type RouteHandler} from 'fastify'
-import type {DB,McPost,McUser} from './autogen/database.js'
-import * as utils from './utils.js'
-import * as textile from './textile.js'
-import * as common from './common.js'
-import form_body from "@fastify/formbody";
-import { resolve } from 'upath';
-import {print_body,type BodyParams,render_login_form} from './render_page.js'
-import {keyBy} from 'lodash-es';
-import { marked } from 'marked'
-import fastify_static from '@fastify/static';
-import type { Kysely,Selectable} from 'kysely'
+import Fastify, {
+  type FastifyRequest,
+  type RouteHandlerMethod , 
+  type FastifyInstance, 
+  type FastifyReply,
+  type onRequestAsyncHookHandler,
+  type RouteHandler
+} from 'fastify'
+import {
+  print_body,
+  type BodyParams,
+  render_login_form
+} from './render_page.js'
+import type {DB,McPost,McUser}      from './autogen/database.js'
+import * as utils                   from './utils.js'
+import * as textile                 from './textile.js'
+import * as common                  from './common.js'
+import form_body                    from "@fastify/formbody";
+import { resolve }                  from 'upath';
+import {keyBy}                      from 'lodash-es';
+import { marked }                   from 'marked'
+import fastify_static               from '@fastify/static';
+import type { Kysely,Selectable}    from 'kysely'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import type {Static } from "@sinclair/typebox";
-import cookie from '@fastify/cookie';
+import type {Static }               from "@sinclair/typebox";
+import cookie                       from '@fastify/cookie';
 
 //import { writeFile } from 'fs/promises';
 
@@ -27,7 +38,6 @@ async function print_menu(db:Kysely<DB>) {
 }
 async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when needed
     const posts:Selectable<McPost>[]=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
-    utils.index_tree(posts,'ID','post_parent')
     const posts_index=keyBy(posts,'post_name')
     return{
       posts,

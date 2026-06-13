@@ -2,13 +2,12 @@
 // oxlint-disable no-unsafe-assignment
 // oxlint-disable no-unsafe-member-access
 import { TypeCompiler }                    from "@sinclair/typebox/compiler";
-import type { TSchema, Static } from "@sinclair/typebox";
+import type { TSchema, Static }            from "@sinclair/typebox";
 import { readFileSync }                    from 'node:fs';
 import { createPool,type PoolOptions }     from 'mysql2'
 import { Kysely, MysqlDialect}             from 'kysely'
 import type {FastifyReply, FastifyRequest} from 'fastify'
 import * as crypto                         from "node:crypto";
-
 import signature                           from "cookie-signature";
 import { TransformDecodeCheckError }       from '@sinclair/typebox/value';
 
@@ -16,59 +15,98 @@ import { TransformDecodeCheckError }       from '@sinclair/typebox/value';
 /*export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
   return a[field]
 }*/
-
-export function index_tree< T,K extends keyof T >({items,id_field,parent_id_field,selected=undefined}:{
-    items:Array<T>,
-    parent_id_field:K,
-    id_field:K
-    selected?:T
+type Key=string|number
+interface IndexDef<T,K extends keyof T >{
+  items:Array<T>,
+  parent_id_field:K,
+  id_field:K
+  selected_id:Key
+  render:(parent:T,first_child?:T)=>string
+}
+function calc_parent_set<T,K extends keyof T >(p:IndexDef<T,K>,by_id:Record<Key,T>){// calc_parent_set(){ //probably from the selected item to the root
+  //const item=this.by_id[this.config.start_id]
+  const {selected_id,id_field,parent_id_field}=p
+  let cur_item=by_id[selected_id]
+  const ans=new Set<Key>()
+  while(cur_item!=null){
+    const id=cur_item[id_field]
+    if (!is_key(id))
+      break
+    ans.add(id)
+    const parent_id=cur_item[parent_id_field]
+    if (!is_key(parent_id))
+      break
+    cur_item=by_id[parent_id]
   }
-){
-  const by_id=index_array(items,id_field)
-  const parent_set=function(){// calc_parent_set(){ //probably from the selected item to the root
-    //const item=this.by_id[this.config.start_id]
-    let cur_item=selected
-    const ans=new Set<Key>()
-    while(cur_item!=null){
-      const id=cur_item[id_field]
-      if (!is_key(id))
-        break
-      ans.add(id)
-      const parent_id=cur_item[parent_id_field]
-      if (!is_key(parent_id))
-        break
-      cur_item=by_id[parent_id]
-    }
-    return ans    
-  }()
-  const children_map=function(){
-    const ans:Record<Key,T[]>={}
-    for (const item of items){
-      const parent_id=item[parent_id_field]
-      if (is_key(parent_id))
-        default_get(ans,parent_id,()=>[]).push(item)
-    }
-  }()
+  return ans    
+}
+interface TreeIndex< T,K extends keyof T >{
+  by_id: Record<Key, T>;
+  parent_set: Set<Key>;
+  children_index: {
+      map: Record<Key, T[]>;
+      root: T | undefined;
+  };
+}
+export function index_tree< T,K extends keyof T >(p:IndexDef<T,K>):TreeIndex<T,K>{
+    const {items,parent_id_field,id_field,selected_id}=p
+    const by_id=index_array(items,id_field)
+    const parent_set=function(){
+      let cur_item=by_id[selected_id]
+      const ans=new Set<Key>()
+      while(cur_item!=null){
+        const id=cur_item[id_field]
+        if (!is_key(id))
+          break
+        ans.add(id)
+        const parent_id=cur_item[parent_id_field]
+        if (!is_key(parent_id))
+          break
+        cur_item=by_id[parent_id]
+      }
+      return ans          
+    }()
   
-  return{by_id,parent_set,children_map}
+    const children_index=function(){
+      const map:Record<Key,T[]>={}
+      let root:T|undefined
+      for (const item of items){
+        const parent_id=item[parent_id_field]
+        if (is_key(parent_id))
+          default_get(map,parent_id,()=>[]).push(item)
+        else
+          root=item
+      }
+      return {map,root}
+  }()
+  return {by_id,parent_set,children_index}
+}
+function is_key(a:unknown): a is Key{
+  return typeof a==='string' || typeof a==='number'
+
+}  
+function find_next< T,K extends keyof T >(p:IndexDef<T,K>,index:TreeIndex<T,K>,item:T,dpos:number ):T|undefined{
+  const {by_id,children_index}=index
+  const {parent_id_field}=p
+  function f(item:T,dpos:number){
+    const parent_id=item[parent_id_field] as unknown //without this case the typ of key after the type guards is sonething more complex that i need. 
+    if (!is_key(parent_id))
+      return
+    const parent=by_id[parent_id]
+    if (parent==null)
+      return
+    const children=children_index.map[parent_id]
+    if (children==null)
+      return
+    const pos=children.indexOf(item)
+    const ans=children[pos+dpos]
+    if (ans!=null)
+      return ans
+    return f(parent,dpos)
+  }
+  return f(item,dpos)
 }
 
-type TOCField=string|number
-interface TOCFields{
-  id:TOCField
-  parent_id:TOCField|undefined
-}
-interface TocItem<T> extends TOCFields{ 
-  data:T
-  children: TocItem<T>[] 
-  next:TocItem<T>|undefined
-};
-
-export interface TOCConfig<T> {
-  get_fields: (a:T)=>TOCFields
-  start_id:TOCField;
-  render_item:(a:T)=>{title:string,href:string|undefined}  
-}
 export function tag(content:string|undefined,tag:string){ //is usefull?
   if (content==null)
     return ''
@@ -83,11 +121,8 @@ function calc_first_non_folder<T>(item:TocItem<T>){
 }
 //type FlexRecord=Record<string, string|number>
 //type Atom=string|number|boolean|null|undefined
-type Key=string|number
-function is_key(a:unknown): a is Key{
-  return typeof a==='string' || typeof a==='number'
 
-}   
+ 
 export function index_array<T,K extends keyof T >(
   items: T[],
   key: K
@@ -113,16 +148,33 @@ export function default_get<T>(obj:Record<Key,T>,k:Key,maker:()=>T){
 
 
 
-export class TOC<T>{
-  by_id
-  enhanced_items
-  parent_path
-  ans
-  constructor(
-    public config:TOCConfig<T>,
-    public items: T[]
-  ){
-    
+export function TOC< T,K extends keyof T >(p:IndexDef<T,K>){
+  const {id_field,selected_id,render}=p
+  const index=index_tree(p)
+  const {children:{map,root},by_id,parent_set}=index
+  
+
+  
+
+  function f(node:T):string{
+    const id=node[id_field]
+    const selected_attr=(selected_id==id)?'class=selected':''
+    const lone_ans= `<li ${selected_attr}> ${render(node)} </li>`
+    if (!is_key(id) || !parent_set.has(id) )
+      return lone_ans
+    const node_children=map[id]
+    if (node_children==null||node_children.length===0)
+      return lone_ans
+    const children_html=node_children.map(f).join('\n')
+    return `<li>${render(node,node_children[0])}<ul>${children_html}</ul></li>`
+  }
+  if (root==null)
+    return 'root not found' //todo: too cryptic
+  return  f(root)
+}
+  for (const [parent_id,children]of Object.entries(index.chil)){
+    const parent=by_id[parent_id]
+
     this.enhanced_items=items.map(this.make_item)
     this.by_id=keyBy(this.enhanced_items,'id')
     this.add_children() 
@@ -151,24 +203,7 @@ export class TOC<T>{
     }
     return ans
   }
-  calc_next(item:TocItem<T>|undefined,dpos:number,caption:string ):string|undefined{
-    if (item==null)
-      return
-    const {parent_id}=item
-    if (parent_id==null)
-      return
-    //this.by_id type is  TOC<T extends Record<string, PropertyKey | null>>.by_id: Record<PropertyKey, TocItem<T>>
-    const parent=this.by_id[parent_id]
-    if (parent==null)//warning  Unnecessary conditional, the types have no overlap  @typescript-eslint/no-unnecessary-condition
-      return
-    const pos=parent.children.indexOf(item)
-    const ans=parent.children[pos+dpos]
-    if (ans!=null){
-      const {title,href}=this.config.render_item(ans.data)
-      return `<a href="${href}">${caption} - ${title}</a>`
-    }
-    return this.calc_next(parent,dpos,caption)
-  } 
+
   
   render_toc(item:TocItem<T>,top:boolean):string{
     const folder=item.children.length>0
