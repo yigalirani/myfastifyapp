@@ -69,17 +69,14 @@ export function index_tree< T,K extends keyof T >(p:IndexDef<T,K>):TreeIndex<T,K
   
     const children_index=function(){
       const map:Record<Key,T[]>={}
-      let root:T|undefined
       for (const item of items){
         const parent_id=item[parent_id_field]
         if (is_key(parent_id))
           default_get(map,parent_id,()=>[]).push(item)
-        else
-          root=item
       }
-      return {map,root}
+      return map
   }()
-  return {by_id,parent_set,children_index}
+  return {by_id,children_index}
 }
 function is_key(a:unknown): a is Key{
   return typeof a==='string' || typeof a==='number'
@@ -95,7 +92,7 @@ function find_next< T,K extends keyof T >(p:IndexDef<T,K>,index:TreeIndex<T,K>,i
     const parent=by_id[parent_id]
     if (parent==null)
       return
-    const children=children_index.map[parent_id]
+    const children=children_index[parent_id]
     if (children==null)
       return
     const pos=children.indexOf(item)
@@ -113,16 +110,16 @@ export function tag(content:string|undefined,tag:string){ //is usefull?
   return `<${tag}>content</${tag}>`
 
 }
-function calc_first_non_folder<T>(item:TocItem<T>){
+/*function calc_first_non_folder< T,K extends keyof T >(item:T){
   const first_child=item.children[0]
   if (first_child==null)
     return item
   return calc_first_non_folder(first_child)
+}*/
+interface ItemEx<T>{
+  item:T
+  parent_path:Array<T>
 }
-//type FlexRecord=Record<string, string|number>
-//type Atom=string|number|boolean|null|undefined
-
- 
 export function index_array<T,K extends keyof T >(
   items: T[],
   key: K
@@ -145,17 +142,18 @@ export function default_get<T>(obj:Record<Key,T>,k:Key,maker:()=>T){
   obj[k]=ans
   return ans
 }
-
-
-
-export function TOC< T,K extends keyof T >(p:IndexDef<T,K>){
+export function map_default_get<T>(map:Map<Key,T>,k:Key,maker:()=>T){
+  const exists=map.get(k)
+  if (exists!=null)
+    return exists
+  const ans=maker() 
+  map.set(k,ans)
+  return ans
+}
+export function render_toc< T,K extends keyof T >(p:IndexDef<T,K>){
   const {id_field,selected_id,render}=p
   const index=index_tree(p)
-  const {children:{map,root},by_id,parent_set}=index
-  
-
-  
-
+  const {children_index,by_id}=index
   function f(node:T):string{
     const id=node[id_field]
     const selected_attr=(selected_id==id)?'class=selected':''
@@ -172,92 +170,8 @@ export function TOC< T,K extends keyof T >(p:IndexDef<T,K>){
     return 'root not found' //todo: too cryptic
   return  f(root)
 }
-  for (const [parent_id,children]of Object.entries(index.chil)){
-    const parent=by_id[parent_id]
 
-    this.enhanced_items=items.map(this.make_item)
-    this.by_id=keyBy(this.enhanced_items,'id')
-    this.add_children() 
-    const item=this.by_id[this.config.start_id]
-    this.parent_path=this.calc_parent_path(item)
-    const first_parent_path=this.parent_path[0]
-    if (item==null || first_parent_path==null)
-      return
-    const toc_section=this.render_toc(first_parent_path,true)
-    const next=this.calc_next(item,1,'Next')
-    const last=this.calc_next(item,-1,'Last')
-    this.ans={
-      toc_section,
-      next,
-      last,
-      parent_path:this.parent_path
-    }
-  }
-  make_item=(data:T)=>{
-    const fields=this.config.get_fields(data)
-    const ans:TocItem<T>={
-      data,
-      children:[],
-      next:undefined, 
-      ...fields
-    }
-    return ans
-  }
 
-  
-  render_toc(item:TocItem<T>,top:boolean):string{
-    const folder=item.children.length>0
-    if (top&&!folder)
-      return ''
-    const {title,href}=this.config.render_item(item.data)
-    const icon=folder?'folder':'page_text'
-    const expand=top||this.parent_path.includes(item)
-    const {id}=item
-    const class_def=(id===this.config.start_id?'class=toc_box_selected':'')
-    const first=calc_first_non_folder(item).data
-    const first_render=this.config.render_item(first)    
-    if (!expand||!folder)
-      return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
-    const children=item.children.map(x=>this.render_toc(x,false)).join('\n')
-    const ul= `<ul>${children}</ul>`
-
-    if (top)
-      return `<h3><a href="${href}">${title}</a></h3>${ul}`
-    return `<li><a href="${first_render.href}"><img src="/${icon}.gif">${title}</a>${ul}</li>`
-    /*for (const parent of parent_path){
-    const selected=parent_path.at(-1)
-    if (selected==null)
-      return ''
-    const {title,href}=render_item(selected)
-    return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
-  }  
-  add_children(){
-    for (const item of this.enhanced_items){
-      /*if (item==null) //this is not needed because for of loop guarantee type non null
-        continue*/
-      const {parent_id}=item
-      if (parent_id==null)
-        continue
-      const parent_item=this.by_id[parent_id]
-      if (parent_item==null)
-        continue
-      parent_item.children.push(item)
-    }
-  }
-  calc_parent_path(item:TocItem<T> | undefined){
-    //const item=this.by_id[this.config.start_id]
-    let cur_item=item
-    const ans:TocItem<T>[]=[]
-    while(cur_item!=null){
-      ans.unshift(cur_item)
-      const {parent_id}=cur_item
-      if (parent_id==null)
-        break
-      cur_item=this.by_id[parent_id]
-    }
-    return ans    
-  }
-}
 
 /*
 export function read_zod<T>(filename: string, schema: ZodType<T>): T {

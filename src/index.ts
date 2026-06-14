@@ -68,7 +68,14 @@ type Cache=Awaited<ReturnType<typeof make_cache>>
     ).ans  
 }*/
 function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
-    const toc=new utils.TOC({
+    const toc=new utils.render_toc({
+
+  items:Array<T>,
+  parent_id_field:K,
+  id_field:K
+  selected_id:Key
+  render:(parent:T,first_child?:T)=>string
+}      
         get_fields(a:Selectable<McPost>){
           return{
             id:a.ID,
@@ -290,4 +297,7 @@ async function bootstap(){
   }
 }
 //await convert_it()
-await bootstap()
+// await bootstap
+// 
+
+
