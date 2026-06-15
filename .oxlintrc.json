@@ -123,7 +123,7 @@
     "typescript/strict-void-return":"off", //dumb rule
     "unicorn/no-useless-undefined":"off", //it actualy not unusells its the only way to convert ()=>void to ()=>undefined
     "eslint/no-underscore-dangle":"off",//i cant have it because i need to mark functions as not used
-    "eslint/no-unreachable":"off",//moved to biome ignore
+    "eslint/no-unreachable":"warn",//moved to biome ignore
     "typescript/switch-exhaustiveness-check": ["warn", {
       "considerDefaultExhaustiveForUnions": true
     }]

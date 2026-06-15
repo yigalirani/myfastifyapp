@@ -1,7 +1,7 @@
 import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply,type onRequestAsyncHookHandler,type RouteHandler} from 'fastify'
 import type {DB,McPost,McUser} from './autogen/database.js'
 import * as utils from './utils.js'
-import * as textile from './textile.js'
+//import * as textile from './textile.js'
 import * as common from './common.js'
 import form_body from "@fastify/formbody";
 import { resolve } from 'upath';
@@ -57,12 +57,8 @@ type Cache=Awaited<ReturnType<typeof make_cache>>
 }*/
 function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
     const toc=new utils.TOC({
-        get_fields(a:Selectable<McPost>){
-          return{
-            id:a.ID,
-            parent_id:a.post_parent
-          }
-        },
+        id_key:'ID',
+        parent_id_key:'post_parent',
         start_id:post_id,
         render_item(data:Selectable<McPost>){
           const {post_title,post_name}=data
@@ -150,7 +146,7 @@ function register_standard_plugins(app:FastifyInstance){
   });     
   app.register(form_body);
 }
-async function _convert_it(){
+/*async function _convert_it(){
   const config=utils.read_typebox('./config_local.json',common.config_schema)
   const db=utils.mysql_pool<DB>(config.connection) 
   const posts=await db.selectFrom('mc_post').selectAll().execute()
@@ -158,7 +154,7 @@ async function _convert_it(){
     const post_markdown=textile.textileToMarkdown(post_content||'')
     await db.updateTable('mc_post').set({post_markdown}).where('ID', '=', ID).executeTakeFirst();
   }
-}
+}*/
 
 class MyServer{
   config_schema=common.config_schema

@@ -29,6 +29,7 @@ export default defineConfig(
   },  
   {
     rules: { //after taking the most tstrict setting, opnioned relaxing
+      "no-unreachable-loop":"error", //this is not enabled by edfault alo its super suefull, had to tuen in own explicitly: https://chatgpt.com/share/6a2ff8ef-d360-83eb-ac7f-b961d239ac2e
       'import-x/no-cycle': 'error', 
       'import-x/namespace':'off',
       'import-x/no-named-as-default-member':'off',
@@ -41,13 +42,12 @@ export default defineConfig(
           "allow": ["chrome"]
         }
       ],
-      "@typescript-eslint/no-invalid-void-type": "off", //needed to mark function as not using this, also one routine that can retrn it.
-      "@typescript-eslint/no-non-null-assertion":"off", //to many of them . also deffecult to replace it with nl for +=
+      "@typescript-eslint/no-invalid-void-type": "warn", //needed to mark function as not using this, also one routine that can retrn it.
+      "@typescript-eslint/no-non-null-assertion":"warn", //to many of them . also deffecult to replace it with nl for +=
       "@typescript-eslint/no-confusing-void-expression":"off", //becuse i like to do return return_void()  and also in VisitorCB
-      "@typescript-eslint/restrict-template-expressions":"off", //its ok if template have numbers
+      "@typescript-eslint/restrict-template-expressions":["warn",{ allowNumber: true}], //its ok if template have numbers
       "@typescript-eslint/no-unsafe-assignment":"warn",
       "@typescript-eslint/no-unsafe-argument":"warn",
-      "no-unsafe-member-access":"off",
       "@typescript-eslint/no-explicit-any": "warn",
       "no-unused-labels": "warn", //i dont like this rule because i like to orgenize long routines using labels
       "@typescript-eslint/no-unnecessary-type-parameters":"off",//i dont like this rule because it flages some usefull functions sucks as resuse_prev

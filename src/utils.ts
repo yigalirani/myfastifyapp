@@ -1,40 +1,43 @@
 // oxlint-disable no-unsafe-call
 // oxlint-disable no-unsafe-assignment
 // oxlint-disable no-unsafe-member-access
-import { TypeCompiler } from "@sinclair/typebox/compiler";
-import type { TSchema, Static } from "@sinclair/typebox";
-import { readFileSync } from 'node:fs';
-//import { writeFile } from 'fs/promises';
-import { createPool,type PoolOptions } from 'mysql2' 
-import { Kysely, MysqlDialect} from 'kysely'
+import { TypeCompiler }                    from "@sinclair/typebox/compiler";
+import type { TSchema, Static }            from "@sinclair/typebox";
+import { readFileSync }                    from 'node:fs';
+import { createPool,type PoolOptions }     from 'mysql2'
+import { Kysely, MysqlDialect}             from 'kysely'
 import type {FastifyReply, FastifyRequest} from 'fastify'
-import * as crypto from "node:crypto";
-import {keyBy} from 'lodash-es';
-import signature from "cookie-signature";
-import { TransformDecodeCheckError } from '@sinclair/typebox/value';
+import * as crypto                         from "node:crypto";
+import signature                           from "cookie-signature";
+import { TransformDecodeCheckError }       from '@sinclair/typebox/value';
 
 /*group of gerneric functions with understood input output that can be used in other programs with another databasre schems*/
 /*export function get_elemnt<T extends Record<PropertyKey,any> >(a:T,field:keyof T){
   return a[field]
 }*/
+type Key=string|number
+function is_key(a:unknown): a is Key{
+  return typeof a==='string' || typeof a==='number'
 
+}  
 
-
-type TOCField=string|number
-interface TOCFields{
+//type TOCField=string|number
+/*interface TOCFields{
   id:TOCField
   parent_id:TOCField|undefined
-}
-interface TocItem<T> extends TOCFields{ 
-  data:T
-  children: TocItem<T>[] 
-  next:TocItem<T>|undefined
+}*/
+interface TocItem< T,K extends keyof T >{ 
+  data    : T
+  children: TocItem<T, K>[]
+  next    : TocItem<T, K>|undefined
 };
 
-export interface TOCConfig<T> {
-  get_fields: (a:T)=>TOCFields
-  start_id:TOCField;
-  render_item:(a:T)=>{title:string,href:string|undefined}  
+export interface TOCConfig< T,K extends keyof T > {
+  //get_fields: (a:T)=>TOCFields
+  start_id     : Key;
+  parent_id_key: K
+  id_key       : K
+  render_item  : (a:T)=>{title:string,href:string|undefined}
 }
 export function tag(content:string|undefined,tag:string){ //is usefull?
   if (content==null)
@@ -42,7 +45,7 @@ export function tag(content:string|undefined,tag:string){ //is usefull?
   return `<${tag}>content</${tag}>`
 
 }
-function calc_first_non_folder<T>(item:TocItem<T>){
+function calc_first_non_folder< T,K extends keyof T >(item:TocItem<T,K>){
   const first_child=item.children[0]
   if (first_child==null)
     return item
@@ -52,19 +55,19 @@ function calc_first_non_folder<T>(item:TocItem<T>){
 //type Atom=string|number|boolean|null|undefined
 
 
-export class TOC<T>{
+export class TOC<T,K extends keyof T >{
   by_id
   enhanced_items
   parent_path
   ans
   constructor(
-    public config:TOCConfig<T>,
+    public config:TOCConfig<T,K>,
     public items: T[]
   ){
     this.enhanced_items=items.map(this.make_item)
-    this.by_id=keyBy(this.enhanced_items,'id')
+    this.by_id=this.make_index()
     this.add_children() 
-    const item=this.by_id[this.config.start_id]
+    const item=this.by_id.get(this.config.start_id)
     this.parent_path=this.calc_parent_path(item)
     const first_parent_path=this.parent_path[0]
     if (item==null || first_parent_path==null)
@@ -77,26 +80,42 @@ export class TOC<T>{
       next,
       last,
       parent_path:this.parent_path
-    }
-  }
+    }  }
   make_item=(data:T)=>{
-    const fields=this.config.get_fields(data)
-    const ans:TocItem<T>={
+    //const fields=this.config.get_fields(data)
+    const ans:TocItem<T,K>={
       data,
       children:[],
       next:undefined, 
-      ...fields
+      //...fields
     }
     return ans
   }
-  calc_next(item:TocItem<T>|undefined,dpos:number,caption:string ):string|undefined{
+  make_index(){
+    const ans:Map<Key,TocItem<T,K>>=new Map()
+    for (const item of this.enhanced_items){
+      const id=this.get_id(item)
+      if (id!=null)
+        ans.set(id,item)
+    }
+    return ans
+  }
+  get_parent(item:TocItem<T,K>|undefined){
     if (item==null)
       return
-    const {parent_id}=item
-    if (parent_id==null)
+    const parent_id=item.data[this.config.parent_id_key] as unknown
+    if (!is_key(parent_id))
       return
     //this.by_id type is  TOC<T extends Record<string, PropertyKey | null>>.by_id: Record<PropertyKey, TocItem<T>>
-    const parent=this.by_id[parent_id]
+    const ans=this.by_id.get(parent_id)
+    if (ans==null)//warning  Unnecessary conditional, the types have no overlap  @typescript-eslint/no-unnecessary-condition
+      return
+    return ans
+  }    
+  calc_next(item:TocItem<T,K>|undefined,dpos:number,caption:string ):string|undefined{
+    if (item==null)
+      return
+    const parent=this.get_parent(item)
     if (parent==null)//warning  Unnecessary conditional, the types have no overlap  @typescript-eslint/no-unnecessary-condition
       return
     const pos=parent.children.indexOf(item)
@@ -107,15 +126,25 @@ export class TOC<T>{
     }
     return this.calc_next(parent,dpos,caption)
   } 
-  
-  render_toc(item:TocItem<T>,top:boolean):string{
+  get_id(item:TocItem<T,K>){
+   const ans=item.data[this.config.id_key] as unknown
+    if (!is_key(ans))
+      return 
+    return ans
+  }
+  render_toc(item:TocItem<T,K>,top:boolean):string{
     const folder=item.children.length>0
     if (top&&!folder)
       return ''
     const {title,href}=this.config.render_item(item.data)
     const icon=folder?'folder':'page_text'
     const expand=top||this.parent_path.includes(item)
-    const {id}=item
+
+    const id=this.get_id(item)
+    if (id==null)
+      return ''
+
+
     const class_def=(id===this.config.start_id?'class=toc_box_selected':'')
     const first=calc_first_non_folder(item).data
     const first_render=this.config.render_item(first)    
@@ -138,25 +167,19 @@ export class TOC<T>{
     for (const item of this.enhanced_items){
       /*if (item==null) //this is not needed because for of loop guarantee type non null
         continue*/
-      const {parent_id}=item
-      if (parent_id==null)
-        continue
-      const parent_item=this.by_id[parent_id]
+      const parent_item=this.get_parent(item)
       if (parent_item==null)
         continue
       parent_item.children.push(item)
     }
   }
-  calc_parent_path(item:TocItem<T> | undefined){
+  calc_parent_path(item:TocItem<T,K> | undefined){
     //const item=this.by_id[this.config.start_id]
     let cur_item=item
-    const ans:TocItem<T>[]=[]
+    const ans:TocItem<T,K>[]=[]
     while(cur_item!=null){
       ans.unshift(cur_item)
-      const {parent_id}=cur_item
-      if (parent_id==null)
-        break
-      cur_item=this.by_id[parent_id]
+      cur_item=this.get_parent(cur_item)
     }
     return ans    
   }
