@@ -4,6 +4,7 @@
   "include":[
 	"src/**/*",
 	"eslint.config.mjs",
+  "eslint.config.fast.mjs",
 	"build.ts" 
   ]
 } 

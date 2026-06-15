@@ -2,7 +2,8 @@
   "type": "module",
   "scripts": {
     "biome": "biome lint",
-    "eslint": "eslint . --color",
+    "eslint": "set TIMING=1 & eslint . --color",
+    "eslint-fast": "set TIMING=1 & eslint -c eslint.config.fast.mjs . --color",    
     "oxlint": "oxlint --type-aware",
     "build": "node build.ts",
     "server": "node ./dist/index.js",
@@ -26,6 +27,10 @@
       "$lint",
       "eslint.config.mjs"
     ],
+    "eslint-fast": [
+      "$lint",
+      "eslint.config.fast.mjs"
+    ],    
     "oxlint": [
       "$lint",
       ".oxlintrc.json"
