@@ -34,7 +34,6 @@ interface TocItem< T,K extends keyof T >{
 
 export interface TOCConfig< T,K extends keyof T > {
   //get_fields: (a:T)=>TOCFields
-  start_id     : Key;
   parent_id_key: K
   id_key       : K
   render_item  : (a:T)=>{title:string,href:string|undefined}
@@ -54,12 +53,9 @@ function calc_first_non_folder< T,K extends keyof T >(item:TocItem<T,K>){
 //type FlexRecord=Record<string, string|number>
 //type Atom=string|number|boolean|null|undefined
 
-
-export class TOC<T,K extends keyof T >{
+export class IndexedChildren<T,K extends keyof T >{
   by_id
-  enhanced_items
-  parent_path
-  ans
+  enhanced_items //shoiuld this be a member? maybe better to oass to by_id and add_children
   constructor(
     public config:TOCConfig<T,K>,
     public items: T[]
@@ -67,20 +63,8 @@ export class TOC<T,K extends keyof T >{
     this.enhanced_items=items.map(this.make_item)
     this.by_id=this.make_index()
     this.add_children() 
-    const item=this.by_id.get(this.config.start_id)
-    this.parent_path=this.calc_parent_path(item)
-    const first_parent_path=this.parent_path[0]
-    if (item==null || first_parent_path==null)
-      return
-    const toc_section=this.render_toc(first_parent_path,true)
-    const next=this.calc_next(item,1,'Next')
-    const last=this.calc_next(item,-1,'Last')
-    this.ans={
-      toc_section,
-      next,
-      last,
-      parent_path:this.parent_path
-    }  }
+  }
+   
   make_item=(data:T)=>{
     //const fields=this.config.get_fields(data)
     const ans:TocItem<T,K>={
@@ -112,57 +96,13 @@ export class TOC<T,K extends keyof T >{
       return
     return ans
   }    
-  calc_next(item:TocItem<T,K>|undefined,dpos:number,caption:string ):string|undefined{
-    if (item==null)
-      return
-    const parent=this.get_parent(item)
-    if (parent==null)//warning  Unnecessary conditional, the types have no overlap  @typescript-eslint/no-unnecessary-condition
-      return
-    const pos=parent.children.indexOf(item)
-    const ans=parent.children[pos+dpos]
-    if (ans!=null){
-      const {title,href}=this.config.render_item(ans.data)
-      return `<a href="${href}">${caption} - ${title}</a>`
-    }
-    return this.calc_next(parent,dpos,caption)
-  } 
   get_id(item:TocItem<T,K>){
    const ans=item.data[this.config.id_key] as unknown
     if (!is_key(ans))
       return 
     return ans
   }
-  render_toc(item:TocItem<T,K>,top:boolean):string{
-    const folder=item.children.length>0
-    if (top&&!folder)
-      return ''
-    const {title,href}=this.config.render_item(item.data)
-    const icon=folder?'folder':'page_text'
-    const expand=top||this.parent_path.includes(item)
-
-    const id=this.get_id(item)
-    if (id==null)
-      return ''
-
-
-    const class_def=(id===this.config.start_id?'class=toc_box_selected':'')
-    const first=calc_first_non_folder(item).data
-    const first_render=this.config.render_item(first)    
-    if (!expand||!folder)
-      return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
-    const children=item.children.map(x=>this.render_toc(x,false)).join('\n')
-    const ul= `<ul>${children}</ul>`
-
-    if (top)
-      return `<h3><a href="${href}">${title}</a></h3>${ul}`
-    return `<li><a href="${first_render.href}"><img src="/${icon}.gif">${title}</a>${ul}</li>`
-    /*for (const parent of parent_path){
-    const selected=parent_path.at(-1)
-    if (selected==null)
-      return ''
-    const {title,href}=render_item(selected)
-    return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
-  }  
+  
   add_children(){
     for (const item of this.enhanced_items){
       /*if (item==null) //this is not needed because for of loop guarantee type non null
@@ -183,6 +123,78 @@ export class TOC<T,K extends keyof T >{
     }
     return ans    
   }
+}
+
+export class TOC<T,K extends keyof T > extends IndexedChildren<T,K>{
+  parent_path
+  ans
+  constructor(
+    config:TOCConfig<T,K>,
+    items: T[],
+    public start_id:Key
+  ){
+    super(config,items)
+    const item=this.by_id.get(start_id)
+    this.parent_path=this.calc_parent_path(item)
+    const first_parent_path=this.parent_path[0]
+    if (item==null || first_parent_path==null)
+      return
+    const toc_section=this.render_toc(first_parent_path,true)
+    const next=this.calc_next(item,1,'Next')
+    const last=this.calc_next(item,-1,'Last')
+    this.ans={
+      toc_section,
+      next,
+      last,
+      parent_path:this.parent_path
+    }  
+  }
+  calc_next(item:TocItem<T,K>|undefined,dpos:number,caption:string ):string|undefined{
+    if (item==null)
+      return
+    const parent=this.get_parent(item)
+    if (parent==null)//warning  Unnecessary conditional, the types have no overlap  @typescript-eslint/no-unnecessary-condition
+      return
+    const pos=parent.children.indexOf(item)
+    const ans=parent.children[pos+dpos]
+    if (ans!=null){
+      const {title,href}=this.config.render_item(ans.data)
+      return `<a href="${href}">${caption} - ${title}</a>`
+    }
+    return this.calc_next(parent,dpos,caption)
+  } 
+  render_toc(item:TocItem<T,K>,top:boolean):string{
+    const folder=item.children.length>0
+    if (top&&!folder)
+      return ''
+    const {title,href}=this.config.render_item(item.data)
+    const icon=folder?'folder':'page_text'
+    const expand=top||this.parent_path.includes(item)
+
+    const id=this.get_id(item)
+    if (id==null)
+      return ''
+
+
+    const class_def=(id===this.start_id?'class=toc_box_selected':'')
+    const first=calc_first_non_folder(item).data
+    const first_render=this.config.render_item(first)    
+    if (!expand||!folder)
+      return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
+    const children=item.children.map(x=>this.render_toc(x,false)).join('\n')
+    const ul= `<ul>${children}</ul>`
+
+    if (top)
+      return `<h3><a href="${href}">${title}</a></h3>${ul}`
+    return `<li><a href="${first_render.href}"><img src="/${icon}.gif">${title}</a>${ul}</li>`
+    /*for (const parent of parent_path){
+    const selected=parent_path.at(-1)
+    if (selected==null)
+      return ''
+    const {title,href}=render_item(selected)
+    return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
+  }  
+  
 }
 
 /*

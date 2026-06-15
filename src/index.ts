@@ -59,7 +59,6 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
     const toc=new utils.TOC({
         id_key:'ID',
         parent_id_key:'post_parent',
-        start_id:post_id,
         render_item(data:Selectable<McPost>){
           const {post_title,post_name}=data
           return{
@@ -68,7 +67,8 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
           }
         }
       },
-      cache.posts  
+      cache.posts,
+      post_id,
     ).ans
     const meta=function(){
       const meta_post_id=toc?.parent_path[0]?.data.ID
