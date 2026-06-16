@@ -125,17 +125,15 @@ export class IndexedChildren<T,K extends keyof T >{
   }
 }
 
-export class TOC<T,K extends keyof T > extends IndexedChildren<T,K>{
+export class TOC<T,K extends keyof T > {
   parent_path
   ans
   constructor(
-    config:TOCConfig<T,K>,
-    items: T[],
+    public index:IndexedChildren<T,K>,
     public start_id:Key
   ){
-    super(config,items)
-    const item=this.by_id.get(start_id)
-    this.parent_path=this.calc_parent_path(item)
+    const item=index.by_id.get(start_id)
+    this.parent_path=index.calc_parent_path(item)
     const first_parent_path=this.parent_path[0]
     if (item==null || first_parent_path==null)
       return
@@ -152,13 +150,14 @@ export class TOC<T,K extends keyof T > extends IndexedChildren<T,K>{
   calc_next(item:TocItem<T,K>|undefined,dpos:number,caption:string ):string|undefined{
     if (item==null)
       return
-    const parent=this.get_parent(item)
+    const {index}=this
+    const parent=index.get_parent(item)
     if (parent==null)//warning  Unnecessary conditional, the types have no overlap  @typescript-eslint/no-unnecessary-condition
       return
     const pos=parent.children.indexOf(item)
     const ans=parent.children[pos+dpos]
     if (ans!=null){
-      const {title,href}=this.config.render_item(ans.data)
+      const {title,href}=index.config.render_item(ans.data)
       return `<a href="${href}">${caption} - ${title}</a>`
     }
     return this.calc_next(parent,dpos,caption)
@@ -167,18 +166,19 @@ export class TOC<T,K extends keyof T > extends IndexedChildren<T,K>{
     const folder=item.children.length>0
     if (top&&!folder)
       return ''
-    const {title,href}=this.config.render_item(item.data)
+    const {index}=this    
+    const {title,href}=index.config.render_item(item.data)
     const icon=folder?'folder':'page_text'
     const expand=top||this.parent_path.includes(item)
 
-    const id=this.get_id(item)
+    const id=index.get_id(item)
     if (id==null)
       return ''
 
 
     const class_def=(id===this.start_id?'class=toc_box_selected':'')
     const first=calc_first_non_folder(item).data
-    const first_render=this.config.render_item(first)    
+    const first_render=index.config.render_item(first)    
     if (!expand||!folder)
       return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
     const children=item.children.map(x=>this.render_toc(x,false)).join('\n')
