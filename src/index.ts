@@ -24,11 +24,26 @@ async function print_menu(db:Kysely<DB>) {
     return `<a href='/${post_name}.htm'>${post_title}</a>`
   }).join('\n')
 }
+function make_posts_children_index(posts:Selectable<McPost>[]){
+ return new utils.IndexedChildren({
+      id_key:'ID',
+      parent_id_key:'post_parent',
+      render_item(data:Selectable<McPost>){
+        const {post_title,post_name}=data
+        return{
+          title:post_title,
+          href:`/${post_name}.htm`
+        }
+      }
+    },posts)  
+}
 async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when needed
     const posts:Selectable<McPost>[]=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
+    const posts_children_index=make_posts_children_index(posts)
     const posts_index=keyBy(posts,'post_name')
     return{
       posts,
+      posts_children_index,
       posts_index,
       menu:await print_menu(db),
       meta:keyBy(await db.selectFrom('mc_meta').selectAll().execute(),'meta_post_id')
@@ -57,18 +72,7 @@ type Cache=Awaited<ReturnType<typeof make_cache>>
 }*/
 
 function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
-    const index=new utils.IndexedChildren({
-      id_key:'ID',
-      parent_id_key:'post_parent',
-      render_item(data:Selectable<McPost>){
-        const {post_title,post_name}=data
-        return{
-          title:post_title,
-          href:`/${post_name}.htm`
-        }
-      }
-    },cache.posts)
-    const toc=new utils.TOC(index,post_id).ans
+    const toc=new utils.TOC(cache.posts_children_index,post_id).ans
     const meta=function(){
       const meta_post_id=toc?.parent_path[0]?.data.ID
       if (meta_post_id==null)
