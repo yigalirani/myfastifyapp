@@ -79,7 +79,7 @@ function calc_toc_meta(cache:Cache,post_id:number) { //starting with this post_i
         return
       return cache.meta[meta_post_id]
     }()
-    return {toc,meta}
+    return {...toc,meta}
 }
 /*
 function  print_comment_form(){
@@ -225,7 +225,6 @@ class MyServer{
   }
   async make_state(request:FastifyRequest, reply:FastifyReply){
     const {secret}=this.config
-
     const cache=this.cache
     if (cache==null)
       throw new Error("server not ready yet, try again later")
@@ -250,15 +249,9 @@ class MyServer{
     const post=cache.posts_index[page]
     if (post==null) 
       return send_body(reply,{body:'page not found'}) 
-    //writeFile('debug/textile.txt',post.post_content)
-    //const markdown=textile.textileToMarkdown(post.post_content||'')
-    //const markdown=textile.textileToMarkdown(post.post_content||'')
-    //writeFile('mark.md',markdown)
     const {ID,post_markdown}=post
     const body=await marked(post_markdown)
     const toc_meta= calc_toc_meta(cache,post.ID)
-    //const comments=this.db.selectFrom('mc_comment_view').selectAll().where("comment_post_id","=",ID).selectAll().execute()
-    //const edit_content=user?.user_status===2&&body;
     const edit_content=user?.user_status===2?post_markdown:undefined
     send_body(reply,{...post,body,...toc_meta,session_id,ID,edit_content})
   }
