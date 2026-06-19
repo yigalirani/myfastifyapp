@@ -71,7 +71,7 @@ type Cache=Awaited<ReturnType<typeof make_cache>>
     ).ans  
 }*/
 
-function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
+function calc_toc_meta(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
     const toc=new utils.TOC(cache.posts_children_index,post_id).ans
     const meta=function(){
       const meta_post_id=toc?.parent_path[0]?.data.ID
@@ -79,9 +79,7 @@ function toc_box_head(cache:Cache,post_id:number) { //starting with this post_id
         return
       return cache.meta[meta_post_id]
     }()
-    if (meta==null)
-      return toc
-    return {meta,...toc} 
+    return {toc,meta}
 }
 /*
 function  print_comment_form(){
@@ -193,13 +191,11 @@ class MyServer{
     if (post==null)
       return send_body(reply,{body:'page not found'})
     const body=await marked(post_markdown)
-    const toc= toc_box_head(cache,post.ID)
-    if (user?.user_status!==2){
-      reply.redirect('/')
-      return
-    }
-    if (mode==='preview')
-      return send_body(reply,{...post,body,...toc,session_id,ID,edit_content:post_markdown})      
+    const toc_meta= calc_toc_meta(cache,post.ID)    
+    if (user?.user_status!==2)
+      return reply.redirect('/')
+     if (mode==='preview')
+      return send_body(reply,{...post,body,...toc_meta,session_id,ID,edit_content:post_markdown})      
     await this.db.updateTable('mc_post').set({post_markdown }).where('ID','=', ID).execute()
     this.cache=await make_cache(this.db)//invalidating the cache after db update
     reply.redirect(`/${post.post_name}.htm`)
@@ -260,11 +256,11 @@ class MyServer{
     //writeFile('mark.md',markdown)
     const {ID,post_markdown}=post
     const body=await marked(post_markdown)
-    const toc= toc_box_head(cache,post.ID)
+    const toc_meta= calc_toc_meta(cache,post.ID)
     //const comments=this.db.selectFrom('mc_comment_view').selectAll().where("comment_post_id","=",ID).selectAll().execute()
     //const edit_content=user?.user_status===2&&body;
     const edit_content=user?.user_status===2?post_markdown:undefined
-    send_body(reply,{...post,body,...toc,session_id,ID,edit_content})
+    send_body(reply,{...post,body,...toc_meta,session_id,ID,edit_content})
   }
 }
 async function bootstap(){
