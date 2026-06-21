@@ -32,12 +32,6 @@ interface TocItem< T,K extends keyof T >{
   next    : TocItem<T, K>|undefined
 };
 
-export interface TOCConfig< T,K extends keyof T > {
-  //get_fields: (a:T)=>TOCFields
-  parent_id_key: K
-  id_key       : K
-  render_item  : (a:T)=>{title:string,href:string|undefined}
-}
 export function tag(content:string|undefined,tag:string){ //is usefull?
   if (content==null)
     return ''
@@ -57,7 +51,9 @@ export class IndexedChildren<T,K extends keyof T >{
   by_id
   enhanced_items //shoiuld this be a member? maybe better to oass to by_id and add_children
   constructor(
-    public config:TOCConfig<T,K>,
+    public id_key       : K,
+    public parent_id_key: K,
+    //public config:TOCConfig<T,K>,
     public items: T[]
   ){
     this.enhanced_items=items.map(this.make_item)
@@ -87,7 +83,7 @@ export class IndexedChildren<T,K extends keyof T >{
   get_parent(item:TocItem<T,K>|undefined){
     if (item==null)
       return
-    const parent_id=item.data[this.config.parent_id_key] as unknown
+    const parent_id=item.data[this.parent_id_key] as unknown
     if (!is_key(parent_id))
       return
     //this.by_id type is  TOC<T extends Record<string, PropertyKey | null>>.by_id: Record<PropertyKey, TocItem<T>>
@@ -97,7 +93,7 @@ export class IndexedChildren<T,K extends keyof T >{
     return ans
   }    
   get_id(item:TocItem<T,K>){
-   const ans=item.data[this.config.id_key] as unknown
+   const ans=item.data[this.id_key] as unknown
     if (!is_key(ans))
       return 
     return ans
@@ -130,7 +126,8 @@ export class TOC<T,K extends keyof T > {
   ans
   constructor(
     public index:IndexedChildren<T,K>,
-    public start_id:Key
+    public start_id:Key,
+    public render_item  : (a:T)=>{title:string,href:string|undefined}
   ){
     const item=index.by_id.get(start_id)
     this.parent_path=index.calc_parent_path(item)
@@ -157,7 +154,7 @@ export class TOC<T,K extends keyof T > {
     const pos=parent.children.indexOf(item)
     const ans=parent.children[pos+dpos]
     if (ans!=null){
-      const {title,href}=index.config.render_item(ans.data)
+      const {title,href}=this.render_item(ans.data)
       return `<a href="${href}">${caption} - ${title}</a>`
     }
     return this.calc_next(parent,dpos,caption)
@@ -167,7 +164,7 @@ export class TOC<T,K extends keyof T > {
     if (top&&!folder)
       return ''
     const {index}=this    
-    const {title,href}=index.config.render_item(item.data)
+    const {title,href}=this.render_item(item.data)
     const icon=folder?'folder':'page_text'
     const expand=top||this.parent_path.includes(item)
 
@@ -178,7 +175,7 @@ export class TOC<T,K extends keyof T > {
 
     const class_def=(id===this.start_id?'class=toc_box_selected':'')
     const first=calc_first_non_folder(item).data
-    const first_render=index.config.render_item(first)    
+    const first_render=this.render_item(first)    
     if (!expand||!folder)
       return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
     const children=item.children.map(x=>this.render_toc(x,false)).join('\n')

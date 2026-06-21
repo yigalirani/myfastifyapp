@@ -1,5 +1,5 @@
 import Fastify,{type FastifyRequest,type RouteHandlerMethod , type FastifyInstance, type FastifyReply,type onRequestAsyncHookHandler,type RouteHandler} from 'fastify'
-import type {DB,McPost,McUser} from './autogen/database.js'
+import type {DB,McPost,McUser,McComment} from './autogen/database.js'
 import * as utils from './utils.js'
 //import * as textile from './textile.js'
 import * as common from './common.js'
@@ -11,7 +11,7 @@ import { marked } from 'marked'
 import fastify_static from '@fastify/static';
 import type { Kysely,Selectable} from 'kysely'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import type {Static } from "@sinclair/typebox";
+import type {ReturnType, Static } from "@sinclair/typebox";
 import cookie from '@fastify/cookie';
 //import { writeFile } from 'fs/promises';
 
@@ -25,23 +25,32 @@ async function print_menu(db:Kysely<DB>) {
   }).join('\n')
 }
 function make_posts_children_index(posts:Selectable<McPost>[]){
- return new utils.IndexedChildren({
-      id_key:'ID',
-      parent_id_key:'post_parent',
-      render_item(data:Selectable<McPost>){
+  return new utils.IndexedChildren(
+    'ID',
+    'post_parent',
+    posts
+  )
+      /*render_item(data:Selectable<McPost>){
         const {post_title,post_name}=data
         return{
           title:post_title,
           href:`/${post_name}.htm`
         }
       }
-    },posts)  
+    },posts)  */
 }
+async function make_posts_comments_index(db:Kysely<DB>,post_id:number){
+  const comments=await db.selectFrom('mc_comment').selectAll().where('comment_post_id', '=', post_id).selectAll().execute()
+  return new utils.IndexedChildren('comment_id','comment_parent_id',comments)  
+}
+//type CommentIndex=utils.IndexedChildren<Selectable<McComment>>
 async function make_cache(db:Kysely<DB>){ //todo: logic to refresh it when needed
     const posts:Selectable<McPost>[]=await db.selectFrom('mc_post').orderBy('menu_order').selectAll().execute()
     const posts_children_index=make_posts_children_index(posts)
     const posts_index=keyBy(posts,'post_name')
+    const comments_index:Map<number,ReturnType<Awaited<typeof make_posts_comments_index>>>=new Map()
     return{
+      comments_index,
       posts,
       posts_children_index,
       posts_index,
@@ -71,8 +80,16 @@ type Cache=Awaited<ReturnType<typeof make_cache>>
     ).ans  
 }*/
 
+function render_post_link(data:Selectable<McPost>){
+  const {post_title,post_name}=data
+  return{
+    title:post_title,
+    href:`/${post_name}.htm`
+  }
+}
+
 function calc_toc_meta(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
-    const toc=new utils.TOC(cache.posts_children_index,post_id).ans
+    const toc=new utils.TOC(cache.posts_children_index,post_id,render_post_link).ans
     const meta=function(){
       const meta_post_id=toc?.parent_path[0]?.data.ID
       if (meta_post_id==null)
@@ -81,6 +98,7 @@ function calc_toc_meta(cache:Cache,post_id:number) { //starting with this post_i
     }()
     return {...toc,meta}
 }
+
 /*
 function  print_comment_form(){
     print("<div class=comment_line></div>");

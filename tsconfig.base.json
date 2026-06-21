@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "noUnusedLocals": true,
+    //"noUnusedLocals": true,
     "noImplicitOverride": true,
     "composite": true,
     /* Language and Environment */
