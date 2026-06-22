@@ -144,7 +144,7 @@ export class TOC<T,K extends keyof T > {
     this.toc_section=this.calc_toc(this.first_parent_path)
     const next=this.calc_next(this.start_item,1)
     if (next)
-      this.next=`<div class=toc_box_next_link>${render_item(next,{template:'Next - ###'})}</div>`
+      this.next=render_item(next,{template:'Next - ###'})
 //    const last=this.calc_next(this.start_item,-1)    */
   }
   calc_class(a:TocItem<T>){

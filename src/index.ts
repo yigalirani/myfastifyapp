@@ -86,11 +86,12 @@ function class_attr(className?:string){
   return ''
 }
 const render_post_link:utils.RenderFunction<Selectable<McPost>>=(item,options)=>{ //Generic type 'TocItem<T, K>' requires 2 type argument(s).ts(2314)
-  const {className}=options
+  const {className,template='###'}=options
   const {post_title}=item.data
   const first=utils.calc_first_non_folder(item).data
-  const {post_name}=first
-  return`<a ${class_attr(className)} href='/${post_name}.htm'>${post_title}</a>`
+  const {post_name}=first  
+  const content=template.replace('###',post_title)
+  return`<a ${class_attr(className)} href='/${post_name}.htm'>${content}</a>`
 }
 
 function calc_toc_meta(cache:Cache,post_id:number) { 

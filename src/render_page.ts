@@ -31,7 +31,7 @@ export interface BodyParams{
 }  
 
 export function print_body(p: BodyParams){
-  const { meta, post_sidebar, post_title, menu, body, toc_section,/*next,*/last,session_id,user,edit_content,ID}=p
+  const { meta, post_sidebar, post_title, menu, body, toc_section,next,session_id,user,edit_content,ID}=p
   const meta_section=function(){
     if (meta==null)
       return ''
@@ -113,7 +113,7 @@ export function print_body(p: BodyParams){
               ${tag(post_title,'h1')}
               ${edit_content_html}
               ${div(body, 'content_body')}
-              ${div(last, 'toc_box_next_link')}              
+              ${div(next, 'toc_box_next_link')}              
        
               <div class=copyright>
                       Copyright &copy;  2003 - ${new Date().getFullYear()} by symbol click. <A href="http://symbolclick.com/about.htm">Contact info</A>
