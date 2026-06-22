@@ -26,10 +26,10 @@ function is_key(a:unknown): a is Key{
   id:TOCField
   parent_id:TOCField|undefined
 }*/
-interface TocItem< T,K extends keyof T >{ 
+export interface TocItem< T>{ 
   data    : T
-  children: TocItem<T, K>[]
-  next    : TocItem<T, K>|undefined
+  children: TocItem<T>[]
+  next    : TocItem<T>|undefined
 };
 
 export function tag(content:string|undefined,tag:string){ //is usefull?
@@ -38,7 +38,7 @@ export function tag(content:string|undefined,tag:string){ //is usefull?
   return `<${tag}>content</${tag}>`
 
 }
-function calc_first_non_folder< T,K extends keyof T >(item:TocItem<T,K>){
+export function calc_first_non_folder< T >(item:TocItem<T>){
   const first_child=item.children[0]
   if (first_child==null)
     return item
@@ -63,7 +63,7 @@ export class IndexedChildren<T,K extends keyof T >{
    
   make_item=(data:T)=>{
     //const fields=this.config.get_fields(data)
-    const ans:TocItem<T,K>={
+    const ans:TocItem<T>={
       data,
       children:[],
       next:undefined, 
@@ -72,7 +72,7 @@ export class IndexedChildren<T,K extends keyof T >{
     return ans
   }
   make_index(){
-    const ans:Map<Key,TocItem<T,K>>=new Map()
+    const ans:Map<Key,TocItem<T>>=new Map()
     for (const item of this.enhanced_items){
       const id=this.get_id(item)
       if (id!=null)
@@ -80,7 +80,7 @@ export class IndexedChildren<T,K extends keyof T >{
     }
     return ans
   }
-  get_parent(item:TocItem<T,K>|undefined){
+  get_parent(item:TocItem<T>|undefined){
     if (item==null)
       return
     const parent_id=item.data[this.parent_id_key] as unknown
@@ -92,7 +92,7 @@ export class IndexedChildren<T,K extends keyof T >{
       return
     return ans
   }    
-  get_id(item:TocItem<T,K>){
+  get_id(item:TocItem<T>){
    const ans=item.data[this.id_key] as unknown
     if (!is_key(ans))
       return 
@@ -109,10 +109,10 @@ export class IndexedChildren<T,K extends keyof T >{
       parent_item.children.push(item)
     }
   }
-  calc_parent_path(item:TocItem<T,K> | undefined){
+  calc_parent_path(item:TocItem<T> | undefined){
     //const item=this.by_id[this.config.start_id]
     let cur_item=item
-    const ans:TocItem<T,K>[]=[]
+    const ans:TocItem<T>[]=[]
     while(cur_item!=null){
       ans.unshift(cur_item)
       cur_item=this.get_parent(cur_item)
@@ -120,85 +120,65 @@ export class IndexedChildren<T,K extends keyof T >{
     return ans    
   }
 }
-
+interface RenderOptions{
+  template?:string
+  className?:string
+}
+export type RenderFunction<T>=(a:TocItem<T>,options:RenderOptions)=>string
 export class TOC<T,K extends keyof T > {
   parent_path
-  ans
+  start_item
+  toc_section
+  next
+  first_parent_path
   constructor(
     public index:IndexedChildren<T,K>,
     public start_id:Key,
-    public render_item  : (a:T)=>{title:string,href:string|undefined}
+    public render_item  : RenderFunction<T>
   ){
-    const item=index.by_id.get(start_id)
-    this.parent_path=index.calc_parent_path(item)
-    const first_parent_path=this.parent_path[0]
-    if (item==null || first_parent_path==null)
-      return
-    const toc_section=this.render_toc(first_parent_path,true)
-    const next=this.calc_next(item,1,'Next')
-    const last=this.calc_next(item,-1,'Last')
-    this.ans={
-      toc_section,
-      next,
-      last,
-      parent_path:this.parent_path
-    }  
+    this.start_item=index.by_id.get(start_id)
+    this.parent_path=index.calc_parent_path(this.start_item)
+    this.first_parent_path=this.parent_path[0]
+    if (this.start_item==null || this.first_parent_path==null)
+      return    
+    this.toc_section=this.calc_toc(this.first_parent_path)
+    const next=this.calc_next(this.start_item,1)
+    if (next)
+      this.next=`<div class=toc_box_next_link>${render_item(next,{template:'Next - ###'})}</div>`
+//    const last=this.calc_next(this.start_item,-1)    */
   }
-  calc_next(item:TocItem<T,K>|undefined,dpos:number,caption:string ):string|undefined{
-    if (item==null)
-      return
-    const {index}=this
-    const parent=index.get_parent(item)
-    if (parent==null)//warning  Unnecessary conditional, the types have no overlap  @typescript-eslint/no-unnecessary-condition
-      return
-    const pos=parent.children.indexOf(item)
-    const ans=parent.children[pos+dpos]
-    if (ans!=null){
-      const {title,href}=this.render_item(ans.data)
-      return `<a href="${href}">${caption} - ${title}</a>`
+  calc_class(a:TocItem<T>){
+    const ans=[]
+    if (a===this.start_item)
+      ans.push('toc_box_selected')
+    if (a===this.first_parent_path)
+      ans.push('toc_top')
+    if (a.children.length>0)
+      ans.push('folder')
+    return ans.join(' ')
+  }
+  calc_toc=(a:TocItem<T>):string=>{
+    const className=this.calc_class(a)
+    const ans=this.render_item(a,{className})
+    if (a.children.length && this.parent_path.includes(a)){
+      const lst=a.children.map(this.calc_toc).map(x=>`<li>${x}</li>`).join('\n')
+      return `${ans} <ul>${lst}</ul>`
     }
-    return this.calc_next(parent,dpos,caption)
-  } 
-  render_toc(item:TocItem<T,K>,top:boolean):string{
-    const folder=item.children.length>0
-    if (top&&!folder)
-      return ''
-    const {index}=this    
-    const {title,href}=this.render_item(item.data)
-    const icon=folder?'folder':'page_text'
-    const expand=top||this.parent_path.includes(item)
-
-    const id=index.get_id(item)
-    if (id==null)
-      return ''
-
-
-    const class_def=(id===this.start_id?'class=toc_box_selected':'')
-    const first=calc_first_non_folder(item).data
-    const first_render=this.render_item(first)    
-    if (!expand||!folder)
-      return `<li><a ${class_def} href="${first_render.href}"><img src="/${icon}.gif">${title}</a></li>`
-    const children=item.children.map(x=>this.render_toc(x,false)).join('\n')
-    const ul= `<ul>${children}</ul>`
-
-    if (top)
-      return `<h3><a href="${href}">${title}</a></h3>${ul}`
-    return `<li><a href="${first_render.href}"><img src="/${icon}.gif">${title}</a>${ul}</li>`
-    /*for (const parent of parent_path){
-    const selected=parent_path.at(-1)
-    if (selected==null)
-      return ''
-    const {title,href}=render_item(selected)
-    return `<h3><a class='toc_box_selected' href='${href}'>${title}</a></h3>`*/
-  }  
-  
+    return ans
+  }
+  calc_next(a:TocItem<T>,dpos:number ):TocItem<T>|undefined{
+    const {index}=this
+    const parent=index.get_parent(this.start_item)
+    if (parent==null)
+      return
+    const pos=parent.children.indexOf(a)
+    const ans=parent.children[pos+dpos]
+    if (ans!=null)
+      return ans
+    return this.calc_next(parent,dpos)
+  }
 }
 
-/*
-export function read_zod<T>(filename: string, schema: ZodType<T>): T {
-  const config_data = readFileSync(filename, 'utf8');  //read sync so doent need the buildfasity pattern
-  return schema.parse(JSON.parse(config_data));
-}*/
 
 export function read_typebox<T extends TSchema>(filename: string, schema: T): Static<T> {
   try{

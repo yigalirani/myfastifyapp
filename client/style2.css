@@ -197,15 +197,20 @@ font-weight:bold;
 	margin:10px;
 	border-radius:5px 5px 5px 5px;
 }
-.toc_box h3{
-
+.toc_box .toc_top{
 	margin:0pt;
+  font-size: larger;
 }
+
 .toc_box li{
 	padding: 0px;
 	margin: 0px;
 	margin-left:0px;
 	list-style:none;
+  list-style-image: url("/page_text.gif")
+}
+.toc_box li:has(> .folder){
+  list-style-image: url("/folder.gif")
 }
 .toc_box li a img{
 	border:0px solid yellow;

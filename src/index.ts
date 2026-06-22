@@ -80,23 +80,28 @@ type Cache=Awaited<ReturnType<typeof make_cache>>
     ).ans  
 }*/
 
-function render_post_link(data:Selectable<McPost>){
-  const {post_title,post_name}=data
-  return{
-    title:post_title,
-    href:`/${post_name}.htm`
-  }
+function class_attr(className?:string){
+  if (className!=null)
+    return `class="${className}"`
+  return ''
+}
+const render_post_link:utils.RenderFunction<Selectable<McPost>>=(item,options)=>{ //Generic type 'TocItem<T, K>' requires 2 type argument(s).ts(2314)
+  const {className}=options
+  const {post_title}=item.data
+  const first=utils.calc_first_non_folder(item).data
+  const {post_name}=first
+  return`<a ${class_attr(className)} href='/${post_name}.htm'>${post_title}</a>`
 }
 
-function calc_toc_meta(cache:Cache,post_id:number) { //starting with this post_id, build the toc, also get met
-    const toc=new utils.TOC(cache.posts_children_index,post_id,render_post_link).ans
-    const meta=function(){
-      const meta_post_id=toc?.parent_path[0]?.data.ID
-      if (meta_post_id==null)
-        return
-      return cache.meta[meta_post_id]
-    }()
-    return {...toc,meta}
+function calc_toc_meta(cache:Cache,post_id:number) { 
+  const toc=new utils.TOC(cache.posts_children_index,post_id,render_post_link)
+  const meta=function(){
+    const meta_post_id=toc.parent_path[0]?.data.ID
+    if (meta_post_id==null)
+      return
+    return cache.meta[meta_post_id]
+  }()
+  return {...toc,meta}// error  Using the spread operator on class instances will lose their class prototype  @typescript-eslint/no-misused-spread
 }
 
 /*
